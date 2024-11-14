@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tycoon Game</title>
+    <style>
+        /* Global body and game container styles */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(45deg, #ff7f50, #ff6347, #ff4500, #ff8c00);
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
+        }
+
+        .game-container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            z-index: 1;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        #business-info p {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+
+        #money {
+            font-size: 24px;
+            margin: 20px 0;
+            color: #27ae60;
+        }
+
+        #conveyor-belt-info {
+            margin-top: 20px;
+        }
+
+        #conveyor-belt-info p {
+            margin: 5px 0;
+        }
+
+        /* Animation for the background gradient */
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Tycoon Game</h1>
+        <div id="money">Money: $0</div>
+
+        <div id="business">
+            <h2>Your Business</h2>
+            <button id="earn-money">Earn Money</button>
+            <button id="upgrade">Upgrade Business ($50)</button>
+        </div>
+
+        <div id="business-info">
+            <p>Money per click: <span id="money-per-click">1</span></p>
+            <p>Business Level: <span id="business-level">1</span></p>
+        </div>
+
+        <div id="conveyor-belt-info">
+            <h2>Conveyor Belts</h2>
+            <button id="buy-conveyor">Buy Conveyor Belt ($100)</button>
+            <p>Conveyor Belt Count: <span id="conveyor-count">0</span></p>
+            <p>Income from Conveyor: $<span id="conveyor-income">0</span> per second</p>
+        </div>
+    </div>
+
+    <script>
+        let money = 0;
+        let moneyPerClick = 1;
+        let businessLevel = 1;
+        let conveyorCount = 0;
+        let conveyorIncome = 0;
+        let conveyorRate = 1000; // Time in ms (1 second)
+
+        const moneyDisplay = document.getElementById("money");
+        const moneyPerClickDisplay = document.getElementById("money-per-click");
+        const businessLevelDisplay = document.getElementById("business-level");
+        const earnMoneyButton = document.getElementById("earn-money");
+        const upgradeButton = document.getElementById("upgrade");
+        const buyConveyorButton = document.getElementById("buy-conveyor");
+        const conveyorCountDisplay = document.getElementById("conveyor-count");
+        const conveyorIncomeDisplay = document.getElementById("conveyor-income");
+
+        earnMoneyButton.addEventListener("click", () => {
+            money += moneyPerClick;
+            updateDisplay();
+        });
+
+        upgradeButton.addEventListener("click", () => {
+            if (money >= 50) {
+                money -= 50;
+                businessLevel++;
+                moneyPerClick *= 2; // Each upgrade doubles the money per click
+                updateDisplay();
+            } else {
+                alert("You don't have enough money to upgrade!");
+            }
+        });
+
+        buyConveyorButton.addEventListener("click", () => {
+            if (money >= 100) {
+                money -= 100;
+                conveyorCount++;
+                conveyorIncome += 1; // Each conveyor belt adds $1 per second
+                updateDisplay();
+            } else {
+                alert("You don't have enough money to buy a conveyor belt!");
+            }
+        });
+
+        // Function to update the display
+        function updateDisplay() {
+            moneyDisplay.textContent = `Money: $${money}`;
+            moneyPerClickDisplay.textContent = moneyPerClick;
+            businessLevelDisplay.textContent = businessLevel;
+            conveyorCountDisplay.textContent = conveyorCount;
+            conveyorIncomeDisplay.textContent = conveyorIncome;
+        }
+
+        // Function to handle conveyor belt income over time
+        setInterval(() => {
+            money += conveyorIncome;
+            updateDisplay();
+        }, conveyorRate); // This adds income every second
+
+    </script>
+</body>
+</html>
