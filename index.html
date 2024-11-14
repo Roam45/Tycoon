@@ -88,7 +88,8 @@
         <div id="business">
             <h2>Your Business</h2>
             <button id="earn-money">Earn Money</button>
-            <button id="upgrade">Upgrade Business ($50)</button>
+            <button id="upgrade">Upgrade Business</button>
+            <p>Upgrade Cost: $<span id="upgrade-cost">50</span></p>
         </div>
 
         <div id="business-info">
@@ -98,9 +99,14 @@
 
         <div id="conveyor-belt-info">
             <h2>Conveyor Belts</h2>
-            <button id="buy-conveyor">Buy Conveyor Belt ($100)</button>
+            <button id="buy-conveyor">Buy Conveyor Belt</button>
             <p>Conveyor Belt Count: <span id="conveyor-count">0</span></p>
             <p>Income from Conveyor: $<span id="conveyor-income">0</span> per second</p>
+        </div>
+
+        <div id="reset-container">
+            <h2>Reset Game</h2>
+            <button id="reset-game">Reset Game (Costs $50)</button>
         </div>
     </div>
 
@@ -111,14 +117,19 @@
         let businessLevel = parseInt(localStorage.getItem("businessLevel")) || 1;
         let conveyorCount = parseInt(localStorage.getItem("conveyorCount")) || 0;
         let conveyorIncome = parseInt(localStorage.getItem("conveyorIncome")) || 0;
+        let upgradeCost = parseInt(localStorage.getItem("upgradeCost")) || 50;
+        let conveyorCost = parseInt(localStorage.getItem("conveyorCost")) || 100;
+        let resetCost = 50; // Cost to reset the game
         let conveyorRate = 1000; // Time in ms (1 second)
 
         const moneyDisplay = document.getElementById("money");
         const moneyPerClickDisplay = document.getElementById("money-per-click");
         const businessLevelDisplay = document.getElementById("business-level");
+        const upgradeCostDisplay = document.getElementById("upgrade-cost");
         const earnMoneyButton = document.getElementById("earn-money");
         const upgradeButton = document.getElementById("upgrade");
         const buyConveyorButton = document.getElementById("buy-conveyor");
+        const resetGameButton = document.getElementById("reset-game");
         const conveyorCountDisplay = document.getElementById("conveyor-count");
         const conveyorIncomeDisplay = document.getElementById("conveyor-income");
 
@@ -129,6 +140,8 @@
             localStorage.setItem("businessLevel", businessLevel);
             localStorage.setItem("conveyorCount", conveyorCount);
             localStorage.setItem("conveyorIncome", conveyorIncome);
+            localStorage.setItem("upgradeCost", upgradeCost);
+            localStorage.setItem("conveyorCost", conveyorCost);
         }
 
         // Update game display
@@ -136,6 +149,7 @@
             moneyDisplay.textContent = `Money: $${money}`;
             moneyPerClickDisplay.textContent = moneyPerClick;
             businessLevelDisplay.textContent = businessLevel;
+            upgradeCostDisplay.textContent = upgradeCost;
             conveyorCountDisplay.textContent = conveyorCount;
             conveyorIncomeDisplay.textContent = conveyorIncome;
         }
@@ -148,10 +162,11 @@
         });
 
         upgradeButton.addEventListener("click", () => {
-            if (money >= 50) {
-                money -= 50;
+            if (money >= upgradeCost) {
+                money -= upgradeCost;
                 businessLevel++;
                 moneyPerClick *= 2; // Each upgrade doubles the money per click
+                upgradeCost *= 2; // Double the cost of the next upgrade
                 saveGame();
                 updateDisplay();
             } else {
@@ -160,14 +175,31 @@
         });
 
         buyConveyorButton.addEventListener("click", () => {
-            if (money >= 100) {
-                money -= 100;
+            if (money >= conveyorCost) {
+                money -= conveyorCost;
                 conveyorCount++;
                 conveyorIncome += 1; // Each conveyor belt adds $1 per second
+                conveyorCost *= 2; // Double the cost of the next conveyor belt
                 saveGame();
                 updateDisplay();
             } else {
                 alert("You don't have enough money to buy a conveyor belt!");
+            }
+        });
+
+        resetGameButton.addEventListener("click", () => {
+            if (money >= resetCost) {
+                money = 0;
+                businessLevel = 1;
+                moneyPerClick = 1;
+                conveyorCount = 0;
+                conveyorIncome = 0;
+                upgradeCost = 50;
+                conveyorCost = 100; // Reset the cost of conveyor belts
+                saveGame();
+                updateDisplay();
+            } else {
+                alert("You need $50 to reset the game.");
             }
         });
 
