@@ -105,11 +105,12 @@
     </div>
 
     <script>
-        let money = 0;
-        let moneyPerClick = 1;
-        let businessLevel = 1;
-        let conveyorCount = 0;
-        let conveyorIncome = 0;
+        // Load game state from localStorage
+        let money = parseInt(localStorage.getItem("money")) || 0;
+        let moneyPerClick = parseInt(localStorage.getItem("moneyPerClick")) || 1;
+        let businessLevel = parseInt(localStorage.getItem("businessLevel")) || 1;
+        let conveyorCount = parseInt(localStorage.getItem("conveyorCount")) || 0;
+        let conveyorIncome = parseInt(localStorage.getItem("conveyorIncome")) || 0;
         let conveyorRate = 1000; // Time in ms (1 second)
 
         const moneyDisplay = document.getElementById("money");
@@ -121,8 +122,28 @@
         const conveyorCountDisplay = document.getElementById("conveyor-count");
         const conveyorIncomeDisplay = document.getElementById("conveyor-income");
 
+        // Save game state to localStorage
+        function saveGame() {
+            localStorage.setItem("money", money);
+            localStorage.setItem("moneyPerClick", moneyPerClick);
+            localStorage.setItem("businessLevel", businessLevel);
+            localStorage.setItem("conveyorCount", conveyorCount);
+            localStorage.setItem("conveyorIncome", conveyorIncome);
+        }
+
+        // Update game display
+        function updateDisplay() {
+            moneyDisplay.textContent = `Money: $${money}`;
+            moneyPerClickDisplay.textContent = moneyPerClick;
+            businessLevelDisplay.textContent = businessLevel;
+            conveyorCountDisplay.textContent = conveyorCount;
+            conveyorIncomeDisplay.textContent = conveyorIncome;
+        }
+
+        // Button event listeners
         earnMoneyButton.addEventListener("click", () => {
             money += moneyPerClick;
+            saveGame();
             updateDisplay();
         });
 
@@ -131,6 +152,7 @@
                 money -= 50;
                 businessLevel++;
                 moneyPerClick *= 2; // Each upgrade doubles the money per click
+                saveGame();
                 updateDisplay();
             } else {
                 alert("You don't have enough money to upgrade!");
@@ -142,27 +164,22 @@
                 money -= 100;
                 conveyorCount++;
                 conveyorIncome += 1; // Each conveyor belt adds $1 per second
+                saveGame();
                 updateDisplay();
             } else {
                 alert("You don't have enough money to buy a conveyor belt!");
             }
         });
 
-        // Function to update the display
-        function updateDisplay() {
-            moneyDisplay.textContent = `Money: $${money}`;
-            moneyPerClickDisplay.textContent = moneyPerClick;
-            businessLevelDisplay.textContent = businessLevel;
-            conveyorCountDisplay.textContent = conveyorCount;
-            conveyorIncomeDisplay.textContent = conveyorIncome;
-        }
-
         // Function to handle conveyor belt income over time
         setInterval(() => {
             money += conveyorIncome;
+            saveGame();
             updateDisplay();
         }, conveyorRate); // This adds income every second
 
+        // Initial display update
+        updateDisplay();
     </script>
 </body>
 </html>
