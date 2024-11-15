@@ -23,12 +23,11 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 400px;
-            max-height: 80vh;
-            overflow-y: auto;
+            width: 300px;
+            z-index: 1;
         }
 
-        h1, h2 {
+        h1 {
             color: #2c3e50;
         }
 
@@ -47,6 +46,11 @@
             background-color: #2980b9;
         }
 
+        #business-info p {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+
         #money {
             font-size: 24px;
             margin: 20px 0;
@@ -54,27 +58,57 @@
         }
 
         #casino-result {
-            font-size: 16px;
+            margin: 20px 0;
+            color: #e74c3c;
+        }
+
+        #conveyor-belt-info {
             margin-top: 20px;
         }
 
+        #conveyor-belt-info p {
+            margin: 5px 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
         @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
+    <!-- Title Screen -->
+    <div id="title-screen" class="game-container">
         <h1>Tycoon Game</h1>
-        <div id="money">Money: $0</div>
+        <button id="start-game">Start Game</button>
+    </div>
 
-        <div id="business-selection">
-            <h2>Choose Your Business</h2>
-            <button id="select-bakery">Bakery</button>
-            <button id="select-tech">Tech</button>
+    <!-- Business Selection Screen -->
+    <div id="business-selection" class="game-container hidden">
+        <h1>Select Your Business</h1>
+        <button id="select-bakery">Bakery</button>
+        <button id="select-tech">Tech</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-container" class="game-container hidden">
+        <h1>Tycoon Game</h1>
+        <div id="business-type-container">
+            <h2>Business Type: <span id="business-type">Bakery</span></h2>
         </div>
+
+        <div id="money">Money: $0</div>
 
         <div id="business">
             <h2>Your Business</h2>
@@ -97,7 +131,8 @@
 
         <div id="casino">
             <h2>Casino</h2>
-            <input type="number" id="bet-amount" placeholder="Enter bet amount" min="1">
+            <p>Place your bet:</p>
+            <input type="number" id="bet-amount" min="1" placeholder="Enter amount">
             <button id="place-bet">Place Bet</button>
             <div id="casino-result"></div>
         </div>
@@ -136,7 +171,14 @@
 
         const selectBakeryButton = document.getElementById("select-bakery");
         const selectTechButton = document.getElementById("select-tech");
+        const businessTypeContainer = document.getElementById("business-type-container");
+        const businessTypeDisplay = document.getElementById("business-type");
 
+        const titleScreen = document.getElementById("title-screen");
+        const businessSelection = document.getElementById("business-selection");
+        const gameContainer = document.getElementById("game-container");
+
+        // Save game state to localStorage
         function saveGame() {
             localStorage.setItem("money", money);
             localStorage.setItem("moneyPerClick", moneyPerClick);
@@ -148,15 +190,7 @@
             localStorage.setItem("selectedBusiness", selectedBusiness);
         }
 
-        function updateDisplay() {
-            moneyDisplay.textContent = `Money: ${formatMoney(money)}`;
-            moneyPerClickDisplay.textContent = moneyPerClick;
-            businessLevelDisplay.textContent = businessLevel;
-            upgradeCostDisplay.textContent = upgradeCost;
-            conveyorCountDisplay.textContent = conveyorCount;
-            conveyorIncomeDisplay.textContent = conveyorIncome;
-        }
-
+        // Format the money for display
         function formatMoney(amount) {
             if (amount >= 1e9) return `$${(amount / 1e9).toFixed(1)} Billion`;
             if (amount >= 1e6) return `$${(amount / 1e6).toFixed(1)} Million`;
@@ -164,15 +198,16 @@
             return `$${amount}`;
         }
 
+        // Function to handle gambling
         function playCasino(betAmount) {
             const chance = Math.random();
-            if (chance < 0.5) {
+            if (chance < 0.001) { // 0.1% chance to win
+                const winnings = betAmount * 3; // Triple the bet
+                money += winnings;
+                casinoResultDisplay.textContent = `You won $${winnings}! You tripled your money.`;
+            } else {
                 money -= betAmount;
                 casinoResultDisplay.textContent = `You lost $${betAmount}! Better luck next time.`;
-            } else {
-                const winnings = betAmount * 2;
-                money += winnings;
-                casinoResultDisplay.textContent = `You won $${winnings}!`;
             }
             saveGame();
             updateDisplay();
@@ -191,6 +226,17 @@
             playCasino(betAmount);
         });
 
+        // Update the display of the game
+        function updateDisplay() {
+            moneyDisplay.textContent = `Money: ${formatMoney(money)}`;
+            moneyPerClickDisplay.textContent = moneyPerClick;
+            businessLevelDisplay.textContent = businessLevel;
+            upgradeCostDisplay.textContent = upgradeCost;
+            conveyorCountDisplay.textContent = conveyorCount;
+            conveyorIncomeDisplay.textContent = conveyorIncome;
+            businessTypeDisplay.textContent = selectedBusiness.charAt(0).toUpperCase() + selectedBusiness.slice(1);
+        }
+
         earnMoneyButton.addEventListener("click", () => {
             money += moneyPerClick;
             saveGame();
@@ -201,12 +247,8 @@
             if (money >= upgradeCost) {
                 money -= upgradeCost;
                 businessLevel++;
-                if (selectedBusiness === 'bakery') {
-                    moneyPerClick += 1; // Bakery: Each upgrade adds 1 to the click value
-                } else if (selectedBusiness === 'tech') {
-                    moneyPerClick *= 2; // Tech: Each upgrade doubles the click value
-                }
-                upgradeCost *= 2;
+                moneyPerClick += selectedBusiness === 'bakery' ? 1 : 2; // Bakery: +1, Tech: +2
+                upgradeCost *= 2; // Double the cost of the next upgrade
                 saveGame();
                 updateDisplay();
             } else {
@@ -218,7 +260,7 @@
             if (money >= conveyorCost) {
                 money -= conveyorCost;
                 conveyorCount++;
-                conveyorIncome += (selectedBusiness === 'tech' ? 2 : 1); // Tech: Each conveyor gives 2 income points
+                conveyorIncome += selectedBusiness === 'tech' ? 2 : 1;
                 conveyorCost *= 2;
                 saveGame();
                 updateDisplay();
@@ -229,44 +271,43 @@
 
         resetGameButton.addEventListener("click", () => {
             if (money >= resetCost) {
-                selectedBusiness = prompt("Choose your business: 'bakery' or 'tech'").toLowerCase();
-                if (selectedBusiness !== 'bakery' && selectedBusiness !== 'tech') {
-                    alert("Invalid business choice. Defaulting to Bakery.");
-                    selectedBusiness = 'bakery';
-                }
-
-                money = 0;
-                businessLevel = 1;
-                moneyPerClick = selectedBusiness === 'bakery' ? 2 : 3; // Bakery starts with 2, Tech with 3
-                conveyorCount = 0;
-                conveyorIncome = 0;
-                upgradeCost = 50;
-                conveyorCost = 100;
-                saveGame();
-                updateDisplay();
+                businessSelection.style.display = "block";
+                gameContainer.style.display = "none";
+                titleScreen.style.display = "none";
             } else {
                 alert("You need $50 to reset the game.");
             }
         });
 
-        setInterval(() => {
-            money += conveyorIncome;
-            saveGame();
-            updateDisplay();
-        }, conveyorRate);
-
         selectBakeryButton.addEventListener("click", () => {
             selectedBusiness = 'bakery';
+            businessSelection.style.display = "none";
+            gameContainer.style.display = "block";
             saveGame();
             updateDisplay();
         });
 
         selectTechButton.addEventListener("click", () => {
             selectedBusiness = 'tech';
+            businessSelection.style.display = "none";
+            gameContainer.style.display = "block";
             saveGame();
             updateDisplay();
         });
 
+        document.getElementById("start-game").addEventListener("click", () => {
+            titleScreen.style.display = "none";
+            businessSelection.style.display = "block";
+        });
+
+        // Income from conveyor belts
+        setInterval(() => {
+            money += conveyorIncome;
+            saveGame();
+            updateDisplay();
+        }, conveyorRate);
+
+        // Initial display update
         updateDisplay();
     </script>
 </body>
