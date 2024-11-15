@@ -226,7 +226,7 @@
             playCasino(betAmount);
         });
 
-        // Update the display of the game
+        // Update game display
         function updateDisplay() {
             moneyDisplay.textContent = `Money: ${formatMoney(money)}`;
             moneyPerClickDisplay.textContent = moneyPerClick;
@@ -274,6 +274,7 @@
                 businessSelection.style.display = "block";
                 gameContainer.style.display = "none";
                 titleScreen.style.display = "none";
+                localStorage.clear();
             } else {
                 alert("You need $50 to reset the game.");
             }
