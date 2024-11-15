@@ -177,11 +177,10 @@
                 money -= betAmount;
                 casinoResultDisplay.textContent = `You lost $${betAmount}! Better luck next time.`;
             } else {
-                // Win with a multiplier (2x, 3x, or 5x randomly)
-                const multiplier = [2, 3, 5][Math.floor(Math.random() * 3)];
-                const winnings = betAmount * multiplier;
+                // Win with a fixed multiplier (no longer random)
+                const winnings = betAmount * 2; // Simple 2x multiplier
                 money += winnings;
-                casinoResultDisplay.textContent = `You won $${winnings}! Multiplier: ${multiplier}x`;
+                casinoResultDisplay.textContent = `You won $${winnings}!`;
             }
             saveGame();
             updateDisplay();
@@ -224,7 +223,7 @@
             if (money >= conveyorCost) {
                 money -= conveyorCost;
                 conveyorCount++;
-                conveyorIncome += 1; // Each conveyor belt adds $1 per second
+                conveyorIncome += 1; // Each conveyor belt adds $1 per second (no multiplier)
                 conveyorCost *= 2; // Double the cost of the next conveyor belt
                 saveGame();
                 updateDisplay();
