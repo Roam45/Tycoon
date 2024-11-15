@@ -150,6 +150,12 @@
         let resetCost = 50; // Cost to reset the game
         let conveyorRate = 1000; // Time in ms (1 second)
         let selectedBusiness = localStorage.getItem("selectedBusiness");
+        
+        // Autoclicker detection variables
+        let lastClickTime = 0;
+        let clickCount = 0;
+        const maxClicksPerSecond = 20; // 20 CPS limit
+        const clickResetTime = 1000; // 1 second window
 
         const moneyDisplay = document.getElementById("money");
         const moneyPerClickDisplay = document.getElementById("money-per-click");
@@ -213,71 +219,40 @@
 
             if (Math.random() < chance) { // Chance of winning
                 money += betAmount * 3; // Triple the bet amount if win
-                casinoResult.textContent = `You won! You tripled your bet: $${betAmount * 3}`;
+                casinoResult.textContent = `You won! You tripled your bet: $${betAmount * 3}.`;
             } else {
-                money -= betAmount;
-                casinoResult.textContent = `You lost $${betAmount}. Better luck next time!`;
+                money -= betAmount; // Lose the bet amount if not win
+                casinoResult.textContent = `You lost your bet: $${betAmount}.`;
             }
+
             saveGame();
             updateDisplay();
         }
 
-        // Button event listeners
+        // Earn money with button click
         earnMoneyButton.addEventListener("click", () => {
+            const currentTime = Date.now();
+
+            // Check if the click rate exceeds CPS limit
+            if (lastClickTime && currentTime - lastClickTime < clickResetTime / maxClicksPerSecond) {
+                clickCount++;
+                if (clickCount > maxClicksPerSecond) {
+                    alert("Autoclicker detected! Game has been reset.");
+                    resetGame();
+                    return;
+                }
+            } else {
+                clickCount = 1;
+            }
+
+            lastClickTime = currentTime;
+
             money += moneyPerClick;
             saveGame();
             updateDisplay();
         });
 
-        upgradeButton.addEventListener("click", () => {
-            if (money >= upgradeCost) {
-                money -= upgradeCost;
-                businessLevel++;
-                moneyPerClick++;
-                upgradeCost *= 2;
-                saveGame();
-                updateDisplay();
-            } else {
-                alert("Not enough money to upgrade!");
-            }
-        });
-
-        buyConveyorButton.addEventListener("click", () => {
-            if (money >= conveyorCost) {
-                money -= conveyorCost;
-                conveyorCount++;
-                conveyorIncome += selectedBusiness === 'tech' ? 2 : 1;
-                conveyorCost *= 2;
-                saveGame();
-                updateDisplay();
-            } else {
-                alert("You don't have enough money to buy a conveyor belt!");
-            }
-        });
-
-        placeBetButton.addEventListener("click", () => {
-            let betAmount = parseInt(betAmountInput.value);
-            playCasino(betAmount);
-        });
-
-        resetGameButton.addEventListener("click", () => {
-            if (money >= resetCost) {
-                money = 0;
-                businessLevel = 1;
-                moneyPerClick = 1;
-                conveyorCount = 0;
-                conveyorIncome = 0;
-                upgradeCost = 50;
-                conveyorCost = 100;
-                selectedBusiness = null;
-                saveGame();
-                showBusinessSelectionScreen();
-            } else {
-                alert("You need $50 to reset the game.");
-            }
-        });
-
-        // Set business selection buttons
+        // Handle business selection
         document.getElementById("select-bakery").addEventListener("click", () => {
             selectedBusiness = 'bakery';
             moneyPerClick = 2;
@@ -318,12 +293,41 @@
             updateDisplay();
         }
 
-        // Function to handle conveyor belt income over time
-        setInterval(() => {
-            money += conveyorIncome;
+        // Reset game
+        function resetGame() {
+            money = 0;
+            moneyPerClick = 1;
+            businessLevel = 1;
+            conveyorCount = 0;
+            conveyorIncome = 0;
+            upgradeCost = 50;
+            conveyorCost = 100;
+            selectedBusiness = null;
             saveGame();
-            updateDisplay();
-        }, 1000); // This adds income every second
+            showBusinessSelectionScreen();
+        }
+
+        resetGameButton.addEventListener("click", () => {
+            if (money >= resetCost) {
+                resetGame();
+            } else {
+                alert("You need $50 to reset the game.");
+            }
+        });
+
+        // Handle conveyor belt purchases
+        buyConveyorButton.addEventListener("click", () => {
+            if (money >= conveyorCost) {
+                money -= conveyorCost;
+                conveyorCount++;
+                conveyorIncome += selectedBusiness === 'tech' ? 2 : 1;
+                conveyorCost *= 2;
+                saveGame();
+                updateDisplay();
+            } else {
+                alert("You don't have enough money to buy a conveyor belt!");
+            }
+        });
 
     </script>
 </body>
