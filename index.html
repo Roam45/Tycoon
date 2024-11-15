@@ -201,13 +201,21 @@
             gameScreen.style.display = "block";
         }
 
-        // Function to handle casino game (0.1% chance to win)
+        // Function to handle casino game (10% chance to win for normal, 30% for supermarket)
         function playCasino(betAmount) {
-            let chance = Math.random();
-            if (chance < 0.001) { // 0.1% chance
+            if (betAmount <= 0 || betAmount > money) {
+                casinoResult.textContent = "Please enter a valid bet amount!";
+                return;
+            }
+
+            // Set chance based on business type
+            let chance = selectedBusiness === 'supermarket' ? 0.30 : 0.10;
+
+            if (Math.random() < chance) { // Chance of winning
                 money += betAmount * 3; // Triple the bet amount if win
                 casinoResult.textContent = `You won! You tripled your bet: $${betAmount * 3}`;
             } else {
+                money -= betAmount;
                 casinoResult.textContent = `You lost $${betAmount}. Better luck next time!`;
             }
             saveGame();
@@ -225,12 +233,12 @@
             if (money >= upgradeCost) {
                 money -= upgradeCost;
                 businessLevel++;
-                moneyPerClick += selectedBusiness === 'bakery' ? 2 : 3;
+                moneyPerClick++;
                 upgradeCost *= 2;
                 saveGame();
                 updateDisplay();
             } else {
-                alert("You don't have enough money to upgrade!");
+                alert("Not enough money to upgrade!");
             }
         });
 
@@ -249,11 +257,7 @@
 
         placeBetButton.addEventListener("click", () => {
             let betAmount = parseInt(betAmountInput.value);
-            if (betAmount > 0 && betAmount <= money) {
-                playCasino(betAmount);
-            } else {
-                alert("Invalid bet amount.");
-            }
+            playCasino(betAmount);
         });
 
         resetGameButton.addEventListener("click", () => {
@@ -265,7 +269,7 @@
                 conveyorIncome = 0;
                 upgradeCost = 50;
                 conveyorCost = 100;
-                selectedBusiness = null; // Reset the business type
+                selectedBusiness = null;
                 saveGame();
                 showBusinessSelectionScreen();
             } else {
@@ -320,6 +324,7 @@
             saveGame();
             updateDisplay();
         }, 1000); // This adds income every second
+
     </script>
 </body>
 </html>
