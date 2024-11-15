@@ -84,10 +84,25 @@
                 background-position: 0% 50%;
             }
         }
+
+        .business-selection {
+            display: none;
+        }
+
     </style>
 </head>
 <body>
-    <div class="game-container" id="game-container">
+    <!-- Business Selection Screen -->
+    <div class="business-selection" id="business-selection">
+        <h1>Select Your Business</h1>
+        <button id="select-bakery">Bakery</button>
+        <button id="select-tech">Tech</button>
+        <button id="select-corner-shop">Corner Shop</button>
+        <button id="select-supermarket">Supermarket</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div class="game-container" id="game-container" style="display: none;">
         <h1>Tycoon Game</h1>
         <div id="money">Money: $0</div>
 
@@ -134,7 +149,7 @@
         let conveyorCost = parseInt(localStorage.getItem("conveyorCost")) || 100;
         let resetCost = 50; // Cost to reset the game
         let conveyorRate = 1000; // Time in ms (1 second)
-        let selectedBusiness = localStorage.getItem("selectedBusiness") || 'bakery'; // Default business is 'bakery'
+        let selectedBusiness = localStorage.getItem("selectedBusiness");
 
         const moneyDisplay = document.getElementById("money");
         const moneyPerClickDisplay = document.getElementById("money-per-click");
@@ -149,6 +164,8 @@
         const casinoResult = document.getElementById("casino-result");
         const conveyorCountDisplay = document.getElementById("conveyor-count");
         const conveyorIncomeDisplay = document.getElementById("conveyor-income");
+        const businessSelectionScreen = document.getElementById("business-selection");
+        const gameScreen = document.getElementById("game-container");
 
         // Save game state to localStorage
         function saveGame() {
@@ -170,6 +187,18 @@
             upgradeCostDisplay.textContent = upgradeCost;
             conveyorCountDisplay.textContent = conveyorCount;
             conveyorIncomeDisplay.textContent = conveyorIncome;
+        }
+
+        // Show the business selection screen
+        function showBusinessSelectionScreen() {
+            businessSelectionScreen.style.display = "block";
+            gameScreen.style.display = "none";
+        }
+
+        // Show the game screen
+        function showGameScreen() {
+            businessSelectionScreen.style.display = "none";
+            gameScreen.style.display = "block";
         }
 
         // Function to handle casino game (0.1% chance to win)
@@ -219,36 +248,78 @@
         });
 
         placeBetButton.addEventListener("click", () => {
-            const betAmount = parseInt(betAmountInput.value);
-            if (isNaN(betAmount) || betAmount <= 0) {
-                alert("Please enter a valid bet amount.");
-                return;
-            }
-            if (money >= betAmount) {
+            let betAmount = parseInt(betAmountInput.value);
+            if (betAmount > 0 && betAmount <= money) {
                 playCasino(betAmount);
             } else {
-                alert("You don't have enough money for that bet.");
+                alert("Invalid bet amount.");
             }
         });
 
         resetGameButton.addEventListener("click", () => {
             if (money >= resetCost) {
-                localStorage.clear(); // Clear localStorage to reset everything
-                window.location.reload(); // Reload the page to reset the game
+                money = 0;
+                businessLevel = 1;
+                moneyPerClick = 1;
+                conveyorCount = 0;
+                conveyorIncome = 0;
+                upgradeCost = 50;
+                conveyorCost = 100;
+                selectedBusiness = null; // Reset the business type
+                saveGame();
+                showBusinessSelectionScreen();
             } else {
                 alert("You need $50 to reset the game.");
             }
         });
 
-        // Set interval to update money from conveyor belts every second
+        // Set business selection buttons
+        document.getElementById("select-bakery").addEventListener("click", () => {
+            selectedBusiness = 'bakery';
+            moneyPerClick = 2;
+            saveGame();
+            showGameScreen();
+            updateDisplay();
+        });
+
+        document.getElementById("select-tech").addEventListener("click", () => {
+            selectedBusiness = 'tech';
+            moneyPerClick = 3;
+            saveGame();
+            showGameScreen();
+            updateDisplay();
+        });
+
+        document.getElementById("select-corner-shop").addEventListener("click", () => {
+            selectedBusiness = 'corner-shop';
+            moneyPerClick = 1;
+            saveGame();
+            showGameScreen();
+            updateDisplay();
+        });
+
+        document.getElementById("select-supermarket").addEventListener("click", () => {
+            selectedBusiness = 'supermarket';
+            moneyPerClick = 4;
+            saveGame();
+            showGameScreen();
+            updateDisplay();
+        });
+
+        // Initial setup: if no business is selected, show the selection screen
+        if (!selectedBusiness) {
+            showBusinessSelectionScreen();
+        } else {
+            showGameScreen();
+            updateDisplay();
+        }
+
+        // Function to handle conveyor belt income over time
         setInterval(() => {
             money += conveyorIncome;
             saveGame();
             updateDisplay();
-        }, conveyorRate);
-
-        // Initial update on page load
-        updateDisplay();
+        }, 1000); // This adds income every second
     </script>
 </body>
 </html>
