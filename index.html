@@ -252,7 +252,58 @@
             updateDisplay();
         });
 
-        // Handle business selection
+        // Handle upgrade business
+        upgradeButton.addEventListener("click", () => {
+            if (money >= upgradeCost) {
+                money -= upgradeCost;
+                businessLevel++;
+                moneyPerClick += 1;
+                upgradeCost = Math.floor(upgradeCost * 1.5); // Increase upgrade cost by 50% each time
+                saveGame();
+                updateDisplay();
+            } else {
+                alert("Not enough money to upgrade!");
+            }
+        });
+
+        // Handle buying conveyor belt
+        buyConveyorButton.addEventListener("click", () => {
+            if (money >= conveyorCost) {
+                money -= conveyorCost;
+                conveyorCount++;
+                conveyorIncome += (selectedBusiness === 'tech' ? 2 : 1);
+                conveyorCost = Math.floor(conveyorCost * 1.5); // Increase conveyor cost
+                saveGame();
+                updateDisplay();
+            } else {
+                alert("You don't have enough money to buy a conveyor belt!");
+            }
+        });
+
+        // Handle reset game
+        resetGameButton.addEventListener("click", () => {
+            if (money >= resetCost) {
+                resetGame();
+            } else {
+                alert("You need $50 to reset the game.");
+            }
+        });
+
+        // Reset game function
+        function resetGame() {
+            money = 0;
+            moneyPerClick = 1;
+            businessLevel = 1;
+            conveyorCount = 0;
+            conveyorIncome = 0;
+            upgradeCost = 50;
+            conveyorCost = 100;
+            selectedBusiness = null;
+            saveGame();
+            showBusinessSelectionScreen();
+        }
+
+        // Business selection handlers
         document.getElementById("select-bakery").addEventListener("click", () => {
             selectedBusiness = 'bakery';
             moneyPerClick = 2;
@@ -292,43 +343,6 @@
             showGameScreen();
             updateDisplay();
         }
-
-        // Reset game
-        function resetGame() {
-            money = 0;
-            moneyPerClick = 1;
-            businessLevel = 1;
-            conveyorCount = 0;
-            conveyorIncome = 0;
-            upgradeCost = 50;
-            conveyorCost = 100;
-            selectedBusiness = null;
-            saveGame();
-            showBusinessSelectionScreen();
-        }
-
-        resetGameButton.addEventListener("click", () => {
-            if (money >= resetCost) {
-                resetGame();
-            } else {
-                alert("You need $50 to reset the game.");
-            }
-        });
-
-        // Handle conveyor belt purchases
-        buyConveyorButton.addEventListener("click", () => {
-            if (money >= conveyorCost) {
-                money -= conveyorCost;
-                conveyorCount++;
-                conveyorIncome += selectedBusiness === 'tech' ? 2 : 1;
-                conveyorCost *= 2;
-                saveGame();
-                updateDisplay();
-            } else {
-                alert("You don't have enough money to buy a conveyor belt!");
-            }
-        });
-
     </script>
 </body>
 </html>
