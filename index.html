@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tycoon Game</title>
     <style>
-        /* Global body and game container styles */
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -25,10 +24,8 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             width: 400px;
-            max-height: 80vh;  /* Max height to make it scrollable */
-            overflow-y: auto;   /* Enables vertical scrolling when content overflows */
-            z-index: 1;
-            position: relative;  /* Ensure the content stays within the container */
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         h1, h2 {
@@ -50,18 +47,17 @@
             background-color: #2980b9;
         }
 
-        #business-info p, #casino-info p {
-            font-size: 18px;
-            margin: 5px 0;
-        }
-
         #money {
             font-size: 24px;
             margin: 20px 0;
             color: #27ae60;
         }
 
-        /* Animation for the background gradient */
+        #casino-result {
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
         @keyframes gradientShift {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -74,16 +70,12 @@
         <h1>Tycoon Game</h1>
         <div id="money">Money: $0</div>
 
-        <!-- Casino Section -->
-        <div id="casino">
-            <h2>Casino</h2>
-            <p>Place your bets and test your luck!</p>
-            <input type="number" id="bet-amount" placeholder="Enter bet amount" min="1">
-            <button id="place-bet">Place Bet</button>
-            <div id="casino-result"></div>
+        <div id="business-selection">
+            <h2>Choose Your Business</h2>
+            <button id="select-bakery">Bakery</button>
+            <button id="select-tech">Tech</button>
         </div>
 
-        <!-- Other Game Sections (Business, Upgrades, etc.) -->
         <div id="business">
             <h2>Your Business</h2>
             <button id="earn-money">Earn Money</button>
@@ -92,11 +84,10 @@
         </div>
 
         <div id="business-info">
-            <p>Money per click: <span id="money-per-click">1</span></p>
+            <p>Money per click: <span id="money-per-click">2</span></p>
             <p>Business Level: <span id="business-level">1</span></p>
         </div>
 
-        <!-- Conveyor Belt Section -->
         <div id="conveyor-belt-info">
             <h2>Conveyor Belts</h2>
             <button id="buy-conveyor">Buy Conveyor Belt</button>
@@ -104,14 +95,13 @@
             <p>Income from Conveyor: $<span id="conveyor-income">0</span> per second</p>
         </div>
 
-        <!-- Shop Section -->
-        <div id="shop">
-            <h2>Shop</h2>
-            <button id="buy-manager">Buy Manager ($200)</button>
-            <button id="buy-assistant">Buy Assistant ($150)</button>
+        <div id="casino">
+            <h2>Casino</h2>
+            <input type="number" id="bet-amount" placeholder="Enter bet amount" min="1">
+            <button id="place-bet">Place Bet</button>
+            <div id="casino-result"></div>
         </div>
 
-        <!-- Reset Game Section -->
         <div id="reset-container">
             <h2>Reset Game</h2>
             <button id="reset-game">Reset Game (Costs $50)</button>
@@ -119,9 +109,8 @@
     </div>
 
     <script>
-        // Load game state from localStorage
         let money = parseInt(localStorage.getItem("money")) || 0;
-        let moneyPerClick = parseInt(localStorage.getItem("moneyPerClick")) || 1;
+        let moneyPerClick = parseInt(localStorage.getItem("moneyPerClick")) || 2; // Default to Bakery
         let businessLevel = parseInt(localStorage.getItem("businessLevel")) || 1;
         let conveyorCount = parseInt(localStorage.getItem("conveyorCount")) || 0;
         let conveyorIncome = parseInt(localStorage.getItem("conveyorIncome")) || 0;
@@ -129,8 +118,7 @@
         let conveyorCost = parseInt(localStorage.getItem("conveyorCost")) || 100;
         let resetCost = 50; // Cost to reset the game
         let conveyorRate = 1000; // Time in ms (1 second)
-        let managerCost = 200;
-        let assistantCost = 150;
+        let selectedBusiness = localStorage.getItem("selectedBusiness") || 'bakery';
 
         const moneyDisplay = document.getElementById("money");
         const moneyPerClickDisplay = document.getElementById("money-per-click");
@@ -142,13 +130,13 @@
         const resetGameButton = document.getElementById("reset-game");
         const conveyorCountDisplay = document.getElementById("conveyor-count");
         const conveyorIncomeDisplay = document.getElementById("conveyor-income");
-
-        // Casino elements
         const betAmountInput = document.getElementById("bet-amount");
         const placeBetButton = document.getElementById("place-bet");
         const casinoResultDisplay = document.getElementById("casino-result");
 
-        // Save game state to localStorage
+        const selectBakeryButton = document.getElementById("select-bakery");
+        const selectTechButton = document.getElementById("select-tech");
+
         function saveGame() {
             localStorage.setItem("money", money);
             localStorage.setItem("moneyPerClick", moneyPerClick);
@@ -157,11 +145,11 @@
             localStorage.setItem("conveyorIncome", conveyorIncome);
             localStorage.setItem("upgradeCost", upgradeCost);
             localStorage.setItem("conveyorCost", conveyorCost);
+            localStorage.setItem("selectedBusiness", selectedBusiness);
         }
 
-        // Update game display
         function updateDisplay() {
-            moneyDisplay.textContent = `Money: $${money}`;
+            moneyDisplay.textContent = `Money: ${formatMoney(money)}`;
             moneyPerClickDisplay.textContent = moneyPerClick;
             businessLevelDisplay.textContent = businessLevel;
             upgradeCostDisplay.textContent = upgradeCost;
@@ -169,16 +157,20 @@
             conveyorIncomeDisplay.textContent = conveyorIncome;
         }
 
-        // Casino functionality
+        function formatMoney(amount) {
+            if (amount >= 1e9) return `$${(amount / 1e9).toFixed(1)} Billion`;
+            if (amount >= 1e6) return `$${(amount / 1e6).toFixed(1)} Million`;
+            if (amount >= 1e3) return `$${(amount / 1e3).toFixed(1)} Thousand`;
+            return `$${amount}`;
+        }
+
         function playCasino(betAmount) {
             const chance = Math.random();
             if (chance < 0.5) {
-                // Lose the bet
                 money -= betAmount;
                 casinoResultDisplay.textContent = `You lost $${betAmount}! Better luck next time.`;
             } else {
-                // Win with a fixed multiplier (no longer random)
-                const winnings = betAmount * 2; // Simple 2x multiplier
+                const winnings = betAmount * 2;
                 money += winnings;
                 casinoResultDisplay.textContent = `You won $${winnings}!`;
             }
@@ -199,7 +191,6 @@
             playCasino(betAmount);
         });
 
-        // Button event listeners
         earnMoneyButton.addEventListener("click", () => {
             money += moneyPerClick;
             saveGame();
@@ -210,8 +201,12 @@
             if (money >= upgradeCost) {
                 money -= upgradeCost;
                 businessLevel++;
-                moneyPerClick *= 2; // Each upgrade doubles the money per click
-                upgradeCost *= 2; // Double the cost of the next upgrade
+                if (selectedBusiness === 'bakery') {
+                    moneyPerClick += 1; // Bakery: Each upgrade adds 1 to the click value
+                } else if (selectedBusiness === 'tech') {
+                    moneyPerClick *= 2; // Tech: Each upgrade doubles the click value
+                }
+                upgradeCost *= 2;
                 saveGame();
                 updateDisplay();
             } else {
@@ -223,8 +218,8 @@
             if (money >= conveyorCost) {
                 money -= conveyorCost;
                 conveyorCount++;
-                conveyorIncome += 1; // Each conveyor belt adds $1 per second (no multiplier)
-                conveyorCost *= 2; // Double the cost of the next conveyor belt
+                conveyorIncome += (selectedBusiness === 'tech' ? 2 : 1); // Tech: Each conveyor gives 2 income points
+                conveyorCost *= 2;
                 saveGame();
                 updateDisplay();
             } else {
@@ -234,13 +229,19 @@
 
         resetGameButton.addEventListener("click", () => {
             if (money >= resetCost) {
+                selectedBusiness = prompt("Choose your business: 'bakery' or 'tech'").toLowerCase();
+                if (selectedBusiness !== 'bakery' && selectedBusiness !== 'tech') {
+                    alert("Invalid business choice. Defaulting to Bakery.");
+                    selectedBusiness = 'bakery';
+                }
+
                 money = 0;
                 businessLevel = 1;
-                moneyPerClick = 1;
+                moneyPerClick = selectedBusiness === 'bakery' ? 2 : 3; // Bakery starts with 2, Tech with 3
                 conveyorCount = 0;
                 conveyorIncome = 0;
                 upgradeCost = 50;
-                conveyorCost = 100; // Reset the cost of conveyor belts
+                conveyorCost = 100;
                 saveGame();
                 updateDisplay();
             } else {
@@ -248,14 +249,24 @@
             }
         });
 
-        // Function to handle conveyor belt income over time
         setInterval(() => {
             money += conveyorIncome;
             saveGame();
             updateDisplay();
-        }, conveyorRate); // This adds income every second
+        }, conveyorRate);
 
-        // Initial display update
+        selectBakeryButton.addEventListener("click", () => {
+            selectedBusiness = 'bakery';
+            saveGame();
+            updateDisplay();
+        });
+
+        selectTechButton.addEventListener("click", () => {
+            selectedBusiness = 'tech';
+            saveGame();
+            updateDisplay();
+        });
+
         updateDisplay();
     </script>
 </body>
