@@ -1,42 +1,177 @@
-// Autoclicker detection variables
-let lastClickTime = 0;
-let clickCount = 0;
-const maxClicksPerSecond = 40; // 40 CPS limit
-const clickResetTime = 1000; // 1 second window
-
-// Function to reset the game
-function resetGame() {
-    money = 0;
-    moneyPerClick = 1;
-    businessLevel = 1;
-    conveyorCount = 0;
-    conveyorIncome = 0;
-    upgradeCost = 50;
-    conveyorCost = 100;
-    selectedBusiness = null;
-    saveGame();
-    showBusinessSelectionScreen();
-}
-
-// Event listener for the "earn money" button
-earnMoneyButton.addEventListener("click", () => {
-    const currentTime = Date.now();
-
-    // Check if the click rate exceeds CPS limit
-    if (lastClickTime && currentTime - lastClickTime < clickResetTime / maxClicksPerSecond) {
-        clickCount++;
-        if (clickCount > maxClicksPerSecond) {
-            alert("Autoclicker detected! Game has been reset.");
-            resetGame();
-            return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tycoon Game</title>
+    <style>
+        /* Global body and game container styles */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 50px;
+            background: linear-gradient(45deg, #ff7f50, #ff6347, #ff4500, #ff8c00);
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
         }
-    } else {
-        clickCount = 1; // Reset click count for a new period
-    }
 
-    lastClickTime = currentTime;
+        .game-container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
 
-    money += moneyPerClick;
-    saveGame();
-    updateDisplay();
-});
+        h1 {
+            color: #2c3e50;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        #money {
+            font-size: 24px;
+            margin: 20px 0;
+            color: #27ae60;
+        }
+
+        #business-info p {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+
+        /* Animation for the background gradient */
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Tycoon Game</h1>
+        <div id="money">Money: $0</div>
+        <div id="business">
+            <button id="earn-money">Earn Money</button>
+            <button id="upgrade">Upgrade Business</button>
+            <p>Upgrade Cost: $<span id="upgrade-cost">50</span></p>
+        </div>
+        <div id="business-info">
+            <p>Money per click: <span id="money-per-click">1</span></p>
+            <p>Business Level: <span id="business-level">1</span></p>
+        </div>
+    </div>
+    <script>
+        // Game variables
+        let money = 0;
+        let moneyPerClick = 1;
+        let businessLevel = 1;
+        let upgradeCost = 50;
+
+        // Autoclicker detection variables
+        let lastClickTime = 0;
+        let clickCount = 0;
+        const maxClicksPerSecond = 40; // 40 CPS limit
+        const clickResetTime = 1000; // 1 second window
+
+        // DOM elements
+        const moneyDisplay = document.getElementById("money");
+        const moneyPerClickDisplay = document.getElementById("money-per-click");
+        const businessLevelDisplay = document.getElementById("business-level");
+        const upgradeCostDisplay = document.getElementById("upgrade-cost");
+        const earnMoneyButton = document.getElementById("earn-money");
+        const upgradeButton = document.getElementById("upgrade");
+
+        // Save game function
+        function saveGame() {
+            localStorage.setItem("money", money);
+            localStorage.setItem("moneyPerClick", moneyPerClick);
+            localStorage.setItem("businessLevel", businessLevel);
+            localStorage.setItem("upgradeCost", upgradeCost);
+        }
+
+        // Update display function
+        function updateDisplay() {
+            moneyDisplay.textContent = `Money: $${money}`;
+            moneyPerClickDisplay.textContent = moneyPerClick;
+            businessLevelDisplay.textContent = businessLevel;
+            upgradeCostDisplay.textContent = upgradeCost;
+        }
+
+        // Reset game function
+        function resetGame() {
+            money = 0;
+            moneyPerClick = 1;
+            businessLevel = 1;
+            upgradeCost = 50;
+            saveGame();
+            updateDisplay();
+        }
+
+        // Earn money with button click
+        earnMoneyButton.addEventListener("click", () => {
+            const currentTime = Date.now();
+
+            // Check if the click rate exceeds CPS limit
+            if (lastClickTime && currentTime - lastClickTime < clickResetTime / maxClicksPerSecond) {
+                clickCount++;
+                if (clickCount > maxClicksPerSecond) {
+                    alert("Autoclicker detected! Game has been reset.");
+                    resetGame();
+                    return;
+                }
+            } else {
+                clickCount = 1; // Reset click count for a new period
+            }
+
+            lastClickTime = currentTime;
+
+            money += moneyPerClick;
+            saveGame();
+            updateDisplay();
+        });
+
+        // Upgrade business function
+        upgradeButton.addEventListener("click", () => {
+            if (money >= upgradeCost) {
+                money -= upgradeCost;
+                businessLevel++;
+                moneyPerClick++;
+                upgradeCost = Math.floor(upgradeCost * 1.5); // Increase upgrade cost by 50% each time
+                saveGame();
+                updateDisplay();
+            } else {
+                alert("Not enough money to upgrade!");
+            }
+        });
+
+        // Initial display update
+        updateDisplay();
+    </script>
+</body>
+</html>
