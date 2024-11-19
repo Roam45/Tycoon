@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tycoon Game</title>
     <style>
+        /* Global body and game container styles */
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -15,18 +16,20 @@
             background: linear-gradient(45deg, #ff7f50, #ff6347, #ff4500, #ff8c00);
             background-size: 400% 400%;
             animation: gradientShift 10s ease infinite;
+            padding: 50px 0; /* Add 50px of space at the top and bottom */
         }
 
-        .game-container, .business-selection {
+        .game-container {
             text-align: center;
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 500px;
+            width: 500px; /* Increase the width of the game container */
+            z-index: 1;
         }
 
-        h1, h2 {
+        h1 {
             color: #2c3e50;
         }
 
@@ -45,16 +48,41 @@
             background-color: #2980b9;
         }
 
+        #business-info p {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+
         #money {
             font-size: 24px;
             margin: 20px 0;
             color: #27ae60;
         }
 
+        #casino-result {
+            margin: 20px 0;
+            color: #e74c3c;
+        }
+
+        #conveyor-belt-info {
+            margin-top: 20px;
+        }
+
+        #conveyor-belt-info p {
+            margin: 5px 0;
+        }
+
+        /* Animation for the background gradient */
         @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         .business-selection {
@@ -63,6 +91,7 @@
     </style>
 </head>
 <body>
+    <!-- Business Selection Screen -->
     <div class="business-selection" id="business-selection">
         <h1>Select Your Business</h1>
         <button id="select-bakery">Bakery</button>
@@ -72,185 +101,234 @@
         <button id="select-doctor">Doctor</button>
     </div>
 
+    <!-- Game Screen -->
     <div class="game-container" id="game-container" style="display: none;">
         <h1>Tycoon Game</h1>
         <div id="money">Money: $0</div>
-        <div id="business-info">
+
+        <div id="business">
             <h2>Your Business</h2>
             <button id="earn-money">Earn Money</button>
             <button id="upgrade">Upgrade Business</button>
             <p>Upgrade Cost: $<span id="upgrade-cost">50</span></p>
+        </div>
+
+        <div id="business-info">
             <p>Money per click: <span id="money-per-click">1</span></p>
             <p>Business Level: <span id="business-level">1</span></p>
         </div>
-        <div id="conveyor-info">
+
+        <div id="conveyor-belt-info">
             <h2>Conveyor Belts</h2>
-            <button id="buy-conveyor">Buy Conveyor ($<span id="conveyor-cost">100</span>)</button>
-            <p>Conveyors Owned: <span id="conveyor-count">0</span></p>
-            <p>Conveyor Income: $<span id="conveyor-income">0</span>/second</p>
+            <button id="buy-conveyor">Buy Conveyor Belt</button>
+            <p>Conveyor Belt Count: <span id="conveyor-count">0</span></p>
+            <p>Income from Conveyor: $<span id="conveyor-income">0</span> per second</p>
         </div>
+
         <div id="casino">
             <h2>Casino</h2>
             <input type="number" id="bet-amount" placeholder="Enter Bet Amount">
             <button id="place-bet">Place Bet</button>
             <div id="casino-result"></div>
         </div>
+
         <div id="reset-container">
-            <button id="reset-game">Reset Game</button>
+            <h2>Reset Game</h2>
+            <button id="reset-game">Reset Game (Costs $50)</button>
         </div>
     </div>
 
     <script>
+        // Load game state from localStorage
         let money = parseInt(localStorage.getItem("money")) || 0;
         let moneyPerClick = parseInt(localStorage.getItem("moneyPerClick")) || 1;
         let businessLevel = parseInt(localStorage.getItem("businessLevel")) || 1;
-        let upgradeCost = parseInt(localStorage.getItem("upgradeCost")) || 50;
         let conveyorCount = parseInt(localStorage.getItem("conveyorCount")) || 0;
         let conveyorIncome = parseInt(localStorage.getItem("conveyorIncome")) || 0;
+        let upgradeCost = parseInt(localStorage.getItem("upgradeCost")) || 50;
         let conveyorCost = parseInt(localStorage.getItem("conveyorCost")) || 100;
-        let selectedBusiness = localStorage.getItem("selectedBusiness");
+        let resetCost = 50; // Cost to reset the game
+        let conveyorRate = 1000; // Time in ms (1 second)
         let doctorIncomeInterval;
-        let conveyorInterval;
-        let doctorIncomeRate = 15;
+        let selectedBusiness = localStorage.getItem("selectedBusiness");
+        
+        // Doctor income logic (Idle rewards)
+        let doctorIncomeRate = 15; // Idle income every 15 seconds
 
         const moneyDisplay = document.getElementById("money");
         const moneyPerClickDisplay = document.getElementById("money-per-click");
         const businessLevelDisplay = document.getElementById("business-level");
         const upgradeCostDisplay = document.getElementById("upgrade-cost");
-        const conveyorCostDisplay = document.getElementById("conveyor-cost");
+        const earnMoneyButton = document.getElementById("earn-money");
+        const upgradeButton = document.getElementById("upgrade");
+        const buyConveyorButton = document.getElementById("buy-conveyor");
+        const placeBetButton = document.getElementById("place-bet");
+        const resetGameButton = document.getElementById("reset-game");
+        const betAmountInput = document.getElementById("bet-amount");
+        const casinoResult = document.getElementById("casino-result");
         const conveyorCountDisplay = document.getElementById("conveyor-count");
         const conveyorIncomeDisplay = document.getElementById("conveyor-income");
         const businessSelectionScreen = document.getElementById("business-selection");
         const gameScreen = document.getElementById("game-container");
 
+        // Save game state to localStorage
         function saveGame() {
             localStorage.setItem("money", money);
             localStorage.setItem("moneyPerClick", moneyPerClick);
             localStorage.setItem("businessLevel", businessLevel);
-            localStorage.setItem("upgradeCost", upgradeCost);
             localStorage.setItem("conveyorCount", conveyorCount);
             localStorage.setItem("conveyorIncome", conveyorIncome);
+            localStorage.setItem("upgradeCost", upgradeCost);
             localStorage.setItem("conveyorCost", conveyorCost);
             localStorage.setItem("selectedBusiness", selectedBusiness);
         }
 
+        // Update game display
         function updateDisplay() {
             moneyDisplay.textContent = `Money: $${money}`;
             moneyPerClickDisplay.textContent = selectedBusiness === 'doctor' 
-                ? `$${100 * businessLevel} every ${doctorIncomeRate} seconds` 
+                ? `$${100 * businessLevel} every 15 seconds`
                 : moneyPerClick;
             businessLevelDisplay.textContent = businessLevel;
             upgradeCostDisplay.textContent = upgradeCost;
-            conveyorCostDisplay.textContent = conveyorCost;
             conveyorCountDisplay.textContent = conveyorCount;
             conveyorIncomeDisplay.textContent = conveyorIncome;
         }
 
+        // Show the business selection screen
         function showBusinessSelectionScreen() {
             businessSelectionScreen.style.display = "block";
             gameScreen.style.display = "none";
         }
 
+        // Show the game screen
         function showGameScreen() {
             businessSelectionScreen.style.display = "none";
             gameScreen.style.display = "block";
-            if (selectedBusiness === 'doctor') startDoctorIncome();
-            startConveyorIncome();
+            if (selectedBusiness === 'doctor') startDoctorIncome(); // Start idle rewards if Doctor is selected
         }
 
+        // Function to handle casino game (10% chance to win for normal, 30% for supermarket)
+        function playCasino(betAmount) {
+            if (betAmount <= 0 || betAmount > money) {
+                casinoResult.textContent = "Please enter a valid bet amount!";
+                return;
+            }
+
+            // Set chance based on business type
+            let chance = selectedBusiness === 'supermarket' ? 0.30 : 0.10;
+
+            if (Math.random() < chance) {
+                money += betAmount;
+                casinoResult.textContent = `You won! You bet $${betAmount}.`;
+            } else {
+                money -= betAmount;
+                casinoResult.textContent = `You lost! You bet $${betAmount}.`;
+            }
+
+            saveGame();
+            updateDisplay();
+        }
+
+        // Doctor income logic (Idle rewards)
         function startDoctorIncome() {
-            if (doctorIncomeInterval) clearInterval(doctorIncomeInterval);
+            if (doctorIncomeInterval) clearInterval(doctorIncomeInterval); // Prevent multiple intervals
             doctorIncomeInterval = setInterval(() => {
-                if (Math.random() < 0.1) {
-                    money = Math.floor(money * 0.1);
-                    alert("Bad surgery! You lost 90% of your money.");
-                } else {
-                    money += 100 * businessLevel;
-                }
+                let income = 100 * businessLevel; // $100 per level
+                money += income;
                 saveGame();
                 updateDisplay();
             }, doctorIncomeRate * 1000);
         }
 
-        function startConveyorIncome() {
-            if (conveyorInterval) clearInterval(conveyorInterval);
-            conveyorInterval = setInterval(() => {
-                const incomePerConveyor = selectedBusiness === 'tech' ? 2 : 1;
-                money += conveyorCount * incomePerConveyor;
-                saveGame();
-                updateDisplay();
-            }, 1000);
-        }
-
-        document.getElementById("select-bakery").addEventListener("click", () => {
-            selectedBusiness = "bakery";
+        // Event listeners for game actions
+        earnMoneyButton.addEventListener("click", () => {
+            money += moneyPerClick;
             saveGame();
-            showGameScreen();
+            updateDisplay();
         });
 
-        document.getElementById("select-tech").addEventListener("click", () => {
-            selectedBusiness = "tech";
-            saveGame();
-            showGameScreen();
-        });
-
-        document.getElementById("earn-money").addEventListener("click", () => {
-            if (selectedBusiness === 'doctor') {
-                alert("Doctor earns passively! You can't click to earn money.");
-            } else {
-                money += moneyPerClick;
-                saveGame();
-                updateDisplay();
-            }
-        });
-
-        document.getElementById("upgrade").addEventListener("click", () => {
+        upgradeButton.addEventListener("click", () => {
             if (money >= upgradeCost) {
                 money -= upgradeCost;
                 businessLevel++;
+                moneyPerClick = businessLevel;
                 upgradeCost = Math.round(upgradeCost * 1.5);
-                moneyPerClick = Math.round(moneyPerClick * 1.2);
                 saveGame();
                 updateDisplay();
-            } else {
-                alert("Not enough money to upgrade!");
             }
         });
 
-        document.getElementById("buy-conveyor").addEventListener("click", () => {
+        buyConveyorButton.addEventListener("click", () => {
             if (money >= conveyorCost) {
                 money -= conveyorCost;
                 conveyorCount++;
-                conveyorIncome += selectedBusiness === 'tech' ? 2 : 1;
-                conveyorCost *= 2;
+                conveyorIncome += 1; // Earn 1 per conveyor, except for tech (which is 2)
+                conveyorCost *= 2; // Each conveyor belt costs twice the previous one
                 saveGame();
                 updateDisplay();
-            } else {
-                alert("Not enough money to buy a conveyor belt!");
             }
         });
 
-        document.getElementById("reset-game").addEventListener("click", () => {
+        placeBetButton.addEventListener("click", () => {
+            let betAmount = parseInt(betAmountInput.value);
+            playCasino(betAmount);
+        });
+
+        // Reset game button action
+        resetGameButton.addEventListener("click", () => {
             money = 0;
             businessLevel = 1;
             moneyPerClick = 1;
             upgradeCost = 50;
             conveyorCount = 0;
             conveyorIncome = 0;
-            conveyorCost = 100;
             selectedBusiness = null;
-            clearInterval(conveyorInterval);
+
+            // Clear saved data
+            localStorage.clear();
+
+            // Stop any running intervals
             clearInterval(doctorIncomeInterval);
-            saveGame();
+
+            // Show the business selection screen
             showBusinessSelectionScreen();
         });
 
+        // Business selection button actions
+        document.getElementById("select-bakery").addEventListener("click", () => {
+            selectedBusiness = 'bakery';
+            showGameScreen();
+        });
+
+        document.getElementById("select-tech").addEventListener("click", () => {
+            selectedBusiness = 'tech';
+            showGameScreen();
+        });
+
+        document.getElementById("select-corner-shop").addEventListener("click", () => {
+            selectedBusiness = 'corner-shop';
+            showGameScreen();
+        });
+
+        document.getElementById("select-supermarket").addEventListener("click", () => {
+            selectedBusiness = 'supermarket';
+            showGameScreen();
+        });
+
+        document.getElementById("select-doctor").addEventListener("click", () => {
+            selectedBusiness = 'doctor';
+            showGameScreen();
+        });
+
+        // Initialize game
         if (selectedBusiness) {
             showGameScreen();
-            updateDisplay();
         } else {
             showBusinessSelectionScreen();
         }
+
+        updateDisplay();
     </script>
 </body>
 </html>
