@@ -228,9 +228,10 @@
                 money += betAmount * 3; // Triple the money
                 casinoResult.textContent = `You won! Your bet of $${betAmount} became $${betAmount * 3}.`;
             } else {
-                money -= betAmount; // Lose the bet amount if not win
-                casinoResult.textContent = `You lost your bet: $${betAmount}.`;
+                money -= betAmount;
+                casinoResult.textContent = `You lost! You bet $${betAmount}.`;
             }
+
             saveGame();
             updateDisplay();
         }
@@ -291,8 +292,17 @@
         // Handle resetting the game
         resetGameButton.addEventListener("click", () => {
             if (money >= resetCost) {
-                money -= resetCost;
+                // Reset all game variables
+                money = 0;
+                moneyPerClick = 1;
+                businessLevel = 1;
+                conveyorCount = 0;
+                conveyorIncome = 0;
+                upgradeCost = 50;
+                conveyorCost = 100;
+                selectedBusiness = null; // No business selected after reset
                 saveGame();
+                showBusinessSelectionScreen(); // Show business selection screen after reset
                 updateDisplay();
                 alert("Game has been reset!");
             } else {
