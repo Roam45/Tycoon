@@ -86,7 +86,7 @@
         }
 
         .business-selection {
-            display: none;
+            display: block;
         }
 
     </style>
@@ -150,13 +150,7 @@
         let conveyorCost = parseInt(localStorage.getItem("conveyorCost")) || 100;
         let resetCost = 50; // Cost to reset the game
         let conveyorRate = 1000; // Time in ms (1 second)
-        let selectedBusiness = localStorage.getItem("selectedBusiness");
-        
-        // Autoclicker detection variables
-        let lastClickTime = 0;
-        let clickCount = 0;
-        const maxClicksPerSecond = 20; // 20 CPS limit
-        const clickResetTime = 1000; // 1 second window
+        let selectedBusiness = localStorage.getItem("selectedBusiness") || "";
 
         const moneyDisplay = document.getElementById("money");
         const moneyPerClickDisplay = document.getElementById("money-per-click");
@@ -238,7 +232,7 @@
             updateDisplay();
         }
 
-        // Handle upgrading the business
+        // Function to handle upgrading the business
         function upgradeBusiness() {
             if (money >= upgradeCost) {
                 money -= upgradeCost;
@@ -251,7 +245,7 @@
             }
         }
 
-        // Handle buying conveyor belts
+        // Function to handle buying conveyor belts
         function buyConveyorBelt() {
             if (money >= conveyorCost) {
                 money -= conveyorCost;
@@ -263,7 +257,7 @@
             }
         }
 
-        // Reset the game
+        // Function to reset the game
         function resetGame() {
             if (money >= resetCost) {
                 money = 0;
@@ -279,26 +273,49 @@
             }
         }
 
-        // Handle placing bets
-        placeBetButton.addEventListener("click", () => {
-            const betAmount = parseInt(betAmountInput.value);
-            playCasino(betAmount);
+        // Business selection buttons functionality
+        document.getElementById("select-bakery").addEventListener("click", () => {
+            selectedBusiness = 'bakery';
+            moneyPerClick = 1; // Set click income for bakery
+            showGameScreen();
+            saveGame();
+            updateDisplay();
         });
 
-        // Handle earning money
-        earnMoneyButton.addEventListener("click", earnMoney);
+        document.getElementById("select-tech").addEventListener("click", () => {
+            selectedBusiness = 'tech';
+            moneyPerClick = 2; // Set click income for tech
+            showGameScreen();
+            saveGame();
+            updateDisplay();
+        });
 
-        // Handle upgrading business
-        upgradeButton.addEventListener("click", upgradeBusiness);
+        document.getElementById("select-corner-shop").addEventListener("click", () => {
+            selectedBusiness = 'corner-shop';
+            moneyPerClick = 3; // Set click income for corner shop
+            showGameScreen();
+            saveGame();
+            updateDisplay();
+        });
 
-        // Handle buying conveyor belts
-        buyConveyorButton.addEventListener("click", buyConveyorBelt);
+        document.getElementById("select-supermarket").addEventListener("click", () => {
+            selectedBusiness = 'supermarket';
+            moneyPerClick = 5; // Set click income for supermarket
+            showGameScreen();
+            saveGame();
+            updateDisplay();
+        });
 
-        // Handle resetting game
+        document.getElementById("select-doctor").addEventListener("click", () => {
+            selectedBusiness = 'doctor';
+            moneyPerClick = 1; // Set click income for doctor
+            showGameScreen();
+            saveGame();
+            updateDisplay();
+        });
+
+        // Reset game functionality
         resetGameButton.addEventListener("click", resetGame);
-
-        // Show the business selection screen when the game starts
-        showBusinessSelectionScreen();
 
         // Automatically earn idle income every 15 seconds (separate from clicking)
         setInterval(() => {
@@ -306,6 +323,9 @@
             saveGame();
             updateDisplay();
         }, 15000);
+
+        // Initially show the business selection screen
+        showBusinessSelectionScreen();
 
     </script>
 </body>
