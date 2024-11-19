@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tycoon Game with Clock</title>
+    <title>Tycoon Game</title>
     <style>
-        /* Global styles */
+        /* Global body and game container styles */
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -16,6 +16,7 @@
             background: linear-gradient(45deg, #ff7f50, #ff6347, #ff4500, #ff8c00);
             background-size: 400% 400%;
             animation: gradientShift 10s ease infinite;
+            padding: 50px 0; /* Add 50px of space at the top and bottom */
         }
 
         .game-container {
@@ -24,7 +25,8 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 500px;
+            width: 500px; /* Increase the width of the game container */
+            z-index: 1;
         }
 
         h1 {
@@ -46,30 +48,31 @@
             background-color: #2980b9;
         }
 
-        #game-clock {
+        #business-info p {
             font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 20px;
+            margin: 5px 0;
         }
 
-        .progress-bar-container {
-            background-color: #ddd;
-            border-radius: 10px;
-            overflow: hidden;
-            height: 20px;
-            width: 100%;
+        #money {
+            font-size: 24px;
             margin: 20px 0;
-            position: relative;
+            color: #27ae60;
         }
 
-        .progress-bar {
-            background-color: #3498db;
-            height: 100%;
-            width: 0%;
-            transition: width 0.5s linear;
+        #casino-result {
+            margin: 20px 0;
+            color: #e74c3c;
         }
 
-        /* Background animation */
+        #conveyor-belt-info {
+            margin-top: 20px;
+        }
+
+        #conveyor-belt-info p {
+            margin: 5px 0;
+        }
+
+        /* Animation for the background gradient */
         @keyframes gradientShift {
             0% {
                 background-position: 0% 50%;
@@ -81,76 +84,275 @@
                 background-position: 0% 50%;
             }
         }
+
+        .business-selection {
+            display: none;
+        }
+
     </style>
 </head>
 <body>
-    <div class="game-container">
+    <!-- Business Selection Screen -->
+    <div class="business-selection" id="business-selection">
+        <h1>Select Your Business</h1>
+        <button id="select-bakery">Bakery</button>
+        <button id="select-tech">Tech</button>
+        <button id="select-corner-shop">Corner Shop</button>
+        <button id="select-supermarket">Supermarket</button>
+        <button id="select-doctor">Doctor</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div class="game-container" id="game-container" style="display: none;">
         <h1>Tycoon Game</h1>
-        <div id="game-clock">Year: 1960, Date: 01/01, Time: 00:00</div>
-        <div class="progress-bar-container">
-            <div class="progress-bar" id="progress-bar"></div>
-        </div>
         <div id="money">Money: $0</div>
+
+        <div id="business">
+            <h2>Your Business</h2>
+            <button id="earn-money">Earn Money</button>
+            <button id="upgrade">Upgrade Business</button>
+            <p>Upgrade Cost: $<span id="upgrade-cost">50</span></p>
+        </div>
+
         <div id="business-info">
             <p>Money per click: <span id="money-per-click">1</span></p>
+            <p>Business Level: <span id="business-level">1</span></p>
         </div>
-        <button id="earn-money">Earn Money</button>
+
+        <div id="conveyor-belt-info">
+            <h2>Conveyor Belts</h2>
+            <button id="buy-conveyor">Buy Conveyor Belt</button>
+            <p>Conveyor Belt Count: <span id="conveyor-count">0</span></p>
+            <p>Income from Conveyor: $<span id="conveyor-income">0</span> per second</p>
+        </div>
+
+        <div id="casino">
+            <h2>Casino</h2>
+            <input type="number" id="bet-amount" placeholder="Enter Bet Amount">
+            <button id="place-bet">Place Bet</button>
+            <div id="casino-result"></div>
+        </div>
+
+        <div id="reset-container">
+            <h2>Reset Game</h2>
+            <button id="reset-game">Reset Game (Costs $50)</button>
+        </div>
     </div>
 
     <script>
-        // In-game clock variables
-        let startYear = 1960;
-        let startMonth = 0; // Months are 0-indexed in Date
-        let startDay = 1;
-        let startHour = 0;
-        const timeMultiplier = 40; // 40x faster than real life
+        // Load game state from localStorage
+        let money = parseInt(localStorage.getItem("money")) || 0;
+        let moneyPerClick = parseInt(localStorage.getItem("moneyPerClick")) || 1;
+        let businessLevel = parseInt(localStorage.getItem("businessLevel")) || 1;
+        let conveyorCount = parseInt(localStorage.getItem("conveyorCount")) || 0;
+        let conveyorIncome = parseInt(localStorage.getItem("conveyorIncome")) || 0;
+        let upgradeCost = parseInt(localStorage.getItem("upgradeCost")) || 50;
+        let conveyorCost = parseInt(localStorage.getItem("conveyorCost")) || 100;
+        let resetCost = 50; // Cost to reset the game
+        let conveyorRate = 1000; // Time in ms (1 second)
+        let doctorIncomeInterval;
+        let selectedBusiness = localStorage.getItem("selectedBusiness");
+        
+        // Doctor income logic (Idle rewards)
+        let doctorIncomeRate = 15; // Idle income every 15 seconds
 
-        // Money and game state
-        let money = 0;
-        let moneyPerClick = 1;
-
-        // Elements
-        const gameClockElement = document.getElementById("game-clock");
-        const progressBarElement = document.getElementById("progress-bar");
-        const moneyElement = document.getElementById("money");
-        const moneyPerClickElement = document.getElementById("money-per-click");
+        const moneyDisplay = document.getElementById("money");
+        const moneyPerClickDisplay = document.getElementById("money-per-click");
+        const businessLevelDisplay = document.getElementById("business-level");
+        const upgradeCostDisplay = document.getElementById("upgrade-cost");
         const earnMoneyButton = document.getElementById("earn-money");
+        const upgradeButton = document.getElementById("upgrade");
+        const buyConveyorButton = document.getElementById("buy-conveyor");
+        const placeBetButton = document.getElementById("place-bet");
+        const resetGameButton = document.getElementById("reset-game");
+        const betAmountInput = document.getElementById("bet-amount");
+        const casinoResult = document.getElementById("casino-result");
+        const conveyorCountDisplay = document.getElementById("conveyor-count");
+        const conveyorIncomeDisplay = document.getElementById("conveyor-income");
+        const businessSelectionScreen = document.getElementById("business-selection");
+        const gameScreen = document.getElementById("game-container");
 
-        // Update in-game clock
-        let gameDate = new Date(startYear, startMonth, startDay, startHour);
-
-        function updateClock() {
-            // Update game time (1 real second = 40 in-game seconds)
-            gameDate.setMinutes(gameDate.getMinutes() + timeMultiplier);
-
-            // Format date and time
-            const year = gameDate.getFullYear();
-            const month = String(gameDate.getMonth() + 1).padStart(2, "0");
-            const day = String(gameDate.getDate()).padStart(2, "0");
-            const hours = String(gameDate.getHours()).padStart(2, "0");
-
-            // Update clock display
-            gameClockElement.textContent = `Year: ${year}, Date: ${month}/${day}, Time: ${hours}:00`;
-
-            // Update progress bar (percentage of the day passed)
-            const secondsInDay = 24 * 60 * 60;
-            const elapsedSeconds =
-                gameDate.getHours() * 3600 + gameDate.getMinutes() * 60;
-            const progressPercent = (elapsedSeconds / secondsInDay) * 100;
-            progressBarElement.style.width = `${progressPercent}%`;
+        // Save game state to localStorage
+        function saveGame() {
+            localStorage.setItem("money", money);
+            localStorage.setItem("moneyPerClick", moneyPerClick);
+            localStorage.setItem("businessLevel", businessLevel);
+            localStorage.setItem("conveyorCount", conveyorCount);
+            localStorage.setItem("conveyorIncome", conveyorIncome);
+            localStorage.setItem("upgradeCost", upgradeCost);
+            localStorage.setItem("conveyorCost", conveyorCost);
+            localStorage.setItem("selectedBusiness", selectedBusiness);
         }
 
-        // Earn money on button click
+        // Update game display
+        function updateDisplay() {
+            moneyDisplay.textContent = `Money: $${money}`;
+            moneyPerClickDisplay.textContent = selectedBusiness === 'doctor' 
+                ? `$${100 * businessLevel} every 15 seconds`
+                : moneyPerClick;
+            businessLevelDisplay.textContent = businessLevel;
+            upgradeCostDisplay.textContent = upgradeCost;
+            conveyorCountDisplay.textContent = conveyorCount;
+            conveyorIncomeDisplay.textContent = conveyorIncome;
+        }
+
+        // Show the business selection screen
+        function showBusinessSelectionScreen() {
+            businessSelectionScreen.style.display = "block";
+            gameScreen.style.display = "none";
+        }
+
+        // Show the game screen
+        function showGameScreen() {
+            businessSelectionScreen.style.display = "none";
+            gameScreen.style.display = "block";
+            if (selectedBusiness === 'doctor') startDoctorIncome(); // Start idle rewards if Doctor is selected
+        }
+
+        // Function to handle casino game (10% chance to win for normal, 30% for supermarket)
+        function playCasino(betAmount) {
+            if (betAmount <= 0 || betAmount > money) {
+                casinoResult.textContent = "Please enter a valid bet amount!";
+                return;
+            }
+
+            // Set chance based on business type
+            let chance = selectedBusiness === 'supermarket' ? 0.30 : 0.10;
+
+            if (Math.random() < chance) {
+                money += betAmount;
+                casinoResult.textContent = `You won! You bet $${betAmount}.`;
+            } else {
+                money -= betAmount;
+                casinoResult.textContent = `You lost! You bet $${betAmount}.`;
+            }
+
+            saveGame();
+            updateDisplay();
+        }
+
+        // Doctor income logic (Idle rewards)
+        function startDoctorIncome() {
+            if (doctorIncomeInterval) clearInterval(doctorIncomeInterval); // Prevent multiple intervals
+            doctorIncomeInterval = setInterval(() => {
+                money += 100 * businessLevel; // Doctor earns $100 per level every 15 seconds
+                saveGame();
+                updateDisplay();
+            }, 15000); // 15 seconds for idle rewards
+        }
+
+        // Earn money with button click
         earnMoneyButton.addEventListener("click", () => {
-            money += moneyPerClick;
-            moneyElement.textContent = `Money: $${money}`;
+            if (selectedBusiness !== 'doctor') {
+                money += moneyPerClick;
+                saveGame();
+                updateDisplay();
+            }
         });
 
-        // Start the clock interval
-        setInterval(updateClock, 1000);
+        // Handle upgrading the business
+        upgradeButton.addEventListener("click", () => {
+            if (money >= upgradeCost) {
+                money -= upgradeCost;
+                businessLevel++;
+                moneyPerClick += selectedBusiness === 'doctor' ? 0 : 1; // Doctor's click is irrelevant
+                upgradeCost = Math.floor(upgradeCost * 1.5);
+                saveGame();
+                updateDisplay();
+            } else {
+                alert("Not enough money to upgrade!");
+            }
+        });
 
-        // Initial update
-        updateClock();
+        // Handle conveyor belt purchase
+        buyConveyorButton.addEventListener("click", () => {
+            if (money >= conveyorCost) {
+                money -= conveyorCost;
+                conveyorCount++;
+                conveyorIncome += 10; // Conveyor increases income by $10 per second
+                conveyorCost = Math.floor(conveyorCost * 1.5); // Increase cost of next conveyor belt
+                saveGame();
+                updateDisplay();
+            } else {
+                alert("Not enough money for conveyor belt!");
+            }
+        });
+
+        // Handle casino bet placement
+        placeBetButton.addEventListener("click", () => {
+            const betAmount = parseInt(betAmountInput.value);
+            playCasino(betAmount);
+        });
+
+        // Handle resetting the game
+        resetGameButton.addEventListener("click", () => {
+            if (money >= resetCost) {
+                // Reset all game variables
+                money = 0;
+                moneyPerClick = 1;
+                businessLevel = 1;
+                conveyorCount = 0;
+                conveyorIncome = 0;
+                upgradeCost = 50;
+                conveyorCost = 100;
+                selectedBusiness = null; // No business selected after reset
+                saveGame();
+                showBusinessSelectionScreen(); // Show business selection screen after reset
+                updateDisplay();
+                alert("Game has been reset!");
+            } else {
+                alert("Not enough money to reset!");
+            }
+        });
+
+        // Business selection handlers
+        document.getElementById("select-bakery").addEventListener("click", () => {
+            selectedBusiness = 'bakery';
+            moneyPerClick = 2;
+            saveGame();
+            showGameScreen();
+            updateDisplay();
+        });
+
+        document.getElementById("select-tech").addEventListener("click", () => {
+            selectedBusiness = 'tech';
+            moneyPerClick = 3;
+            saveGame();
+            showGameScreen();
+            updateDisplay();
+        });
+
+        document.getElementById("select-corner-shop").addEventListener("click", () => {
+            selectedBusiness = 'corner-shop';
+            moneyPerClick = 1;
+            saveGame();
+            showGameScreen();
+            updateDisplay();
+        });
+
+        document.getElementById("select-supermarket").addEventListener("click", () => {
+            selectedBusiness = 'supermarket';
+            moneyPerClick = 4;
+            saveGame();
+            showGameScreen();
+            updateDisplay();
+        });
+
+        document.getElementById("select-doctor").addEventListener("click", () => {
+            selectedBusiness = 'doctor';
+            moneyPerClick = 0; // Doctor doesn't earn from clicks
+            saveGame();
+            showGameScreen();
+            updateDisplay();
+        });
+
+        // Initialize the game
+        if (!selectedBusiness) {
+            showBusinessSelectionScreen();
+        } else {
+            showGameScreen();
+            updateDisplay();
+        }
     </script>
 </body>
 </html>
