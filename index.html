@@ -88,7 +88,6 @@
         .business-selection {
             display: none;
         }
-
     </style>
 </head>
 <body>
@@ -235,28 +234,62 @@
         function startDoctorIncome() {
             if (doctorIncomeInterval) clearInterval(doctorIncomeInterval); // Prevent multiple intervals
             doctorIncomeInterval = setInterval(() => {
-                money += 100 * businessLevel; // Doctor earns $100 per level every 15 seconds
+                money += 100 * businessLevel;
                 saveGame();
                 updateDisplay();
-            }, 15000); // 15 seconds for idle rewards
+            }, doctorIncomeRate * 1000);
         }
 
-        // Earn money with button click
+        function stopDoctorIncome() {
+            if (doctorIncomeInterval) clearInterval(doctorIncomeInterval);
+        }
+
+        // Add event listeners to business selection buttons
+        document.getElementById("select-bakery").addEventListener("click", () => {
+            selectedBusiness = "bakery";
+            saveGame();
+            showGameScreen();
+        });
+        document.getElementById("select-tech").addEventListener("click", () => {
+            selectedBusiness = "tech";
+            saveGame();
+            showGameScreen();
+        });
+        document.getElementById("select-corner-shop").addEventListener("click", () => {
+            selectedBusiness = "corner-shop";
+            saveGame();
+            showGameScreen();
+        });
+        document.getElementById("select-supermarket").addEventListener("click", () => {
+            selectedBusiness = "supermarket";
+            saveGame();
+            showGameScreen();
+        });
+        document.getElementById("select-doctor").addEventListener("click", () => {
+            selectedBusiness = "doctor";
+            saveGame();
+            showGameScreen();
+        });
+
+        // Add event listener to earn money button
         earnMoneyButton.addEventListener("click", () => {
-            if (selectedBusiness !== 'doctor') {
+            if (selectedBusiness === 'doctor') {
+                alert("You can't click to earn money as Doctor!");
+            } else {
                 money += moneyPerClick;
                 saveGame();
                 updateDisplay();
             }
         });
 
-        // Handle upgrading the business
+        // Add event listener to upgrade button
         upgradeButton.addEventListener("click", () => {
             if (money >= upgradeCost) {
                 money -= upgradeCost;
                 businessLevel++;
-                moneyPerClick += selectedBusiness === 'doctor' ? 0 : 1; // Doctor's click is irrelevant
-                upgradeCost = Math.floor(upgradeCost * 1.5);
+                upgradeCost = Math.round(upgradeCost * 1.5);
+                moneyPerClick = Math.round(moneyPerClick * 1.2);
+                if (selectedBusiness === 'doctor') startDoctorIncome(); // Update income for Doctor
                 saveGame();
                 updateDisplay();
             } else {
@@ -264,94 +297,56 @@
             }
         });
 
-        // Handle conveyor belt purchase
+        // Add event listener to buy conveyor button
         buyConveyorButton.addEventListener("click", () => {
             if (money >= conveyorCost) {
                 money -= conveyorCost;
                 conveyorCount++;
-                conveyorIncome += 10; // Conveyor increases income by $10 per second
-                conveyorCost = Math.floor(conveyorCost * 1.5); // Increase cost of next conveyor belt
+                conveyorIncome += 5;
+                conveyorCost = Math.round(conveyorCost * 1.2);
                 saveGame();
                 updateDisplay();
             } else {
-                alert("Not enough money for conveyor belt!");
+                alert("Not enough money to buy a conveyor belt!");
             }
         });
 
-        // Handle casino bet placement
+        // Conveyor belt logic (passive income)
+        setInterval(() => {
+            money += conveyorIncome;
+            saveGame();
+            updateDisplay();
+        }, conveyorRate);
+
+        // Add event listener to casino bet button
         placeBetButton.addEventListener("click", () => {
             const betAmount = parseInt(betAmountInput.value);
             playCasino(betAmount);
         });
 
-        // Handle resetting the game
+        // Add event listener to reset game button
         resetGameButton.addEventListener("click", () => {
             if (money >= resetCost) {
-                // Reset all game variables
-                money = 0;
-                moneyPerClick = 1;
+                money -= resetCost;
                 businessLevel = 1;
+                moneyPerClick = 1;
                 conveyorCount = 0;
                 conveyorIncome = 0;
                 upgradeCost = 50;
                 conveyorCost = 100;
-                selectedBusiness = null; // No business selected after reset
                 saveGame();
-                showBusinessSelectionScreen(); // Show business selection screen after reset
                 updateDisplay();
-                alert("Game has been reset!");
             } else {
-                alert("Not enough money to reset!");
+                alert("Not enough money to reset the game!");
             }
         });
 
-        // Business selection handlers
-        document.getElementById("select-bakery").addEventListener("click", () => {
-            selectedBusiness = 'bakery';
-            moneyPerClick = 2;
-            saveGame();
+        // Initialize game
+        if (selectedBusiness) {
             showGameScreen();
             updateDisplay();
-        });
-
-        document.getElementById("select-tech").addEventListener("click", () => {
-            selectedBusiness = 'tech';
-            moneyPerClick = 3;
-            saveGame();
-            showGameScreen();
-            updateDisplay();
-        });
-
-        document.getElementById("select-corner-shop").addEventListener("click", () => {
-            selectedBusiness = 'corner-shop';
-            moneyPerClick = 1;
-            saveGame();
-            showGameScreen();
-            updateDisplay();
-        });
-
-        document.getElementById("select-supermarket").addEventListener("click", () => {
-            selectedBusiness = 'supermarket';
-            moneyPerClick = 4;
-            saveGame();
-            showGameScreen();
-            updateDisplay();
-        });
-
-        document.getElementById("select-doctor").addEventListener("click", () => {
-            selectedBusiness = 'doctor';
-            moneyPerClick = 0; // Doctor doesn't earn from clicks
-            saveGame();
-            showGameScreen();
-            updateDisplay();
-        });
-
-        // Initialize the game
-        if (!selectedBusiness) {
-            showBusinessSelectionScreen();
         } else {
-            showGameScreen();
-            updateDisplay();
+            showBusinessSelectionScreen();
         }
     </script>
 </body>
