@@ -51,11 +51,6 @@
             color: #27ae60;
         }
 
-        #casino-result {
-            margin: 20px 0;
-            color: #e74c3c;
-        }
-
         @keyframes gradientShift {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -88,6 +83,12 @@
             <p>Money per click: <span id="money-per-click">1</span></p>
             <p>Business Level: <span id="business-level">1</span></p>
         </div>
+        <div id="conveyor-info">
+            <h2>Conveyor Belts</h2>
+            <button id="buy-conveyor">Buy Conveyor ($<span id="conveyor-cost">100</span>)</button>
+            <p>Conveyors Owned: <span id="conveyor-count">0</span></p>
+            <p>Conveyor Income: $<span id="conveyor-income">0</span>/second</p>
+        </div>
         <div id="casino">
             <h2>Casino</h2>
             <input type="number" id="bet-amount" placeholder="Enter Bet Amount">
@@ -104,14 +105,21 @@
         let moneyPerClick = parseInt(localStorage.getItem("moneyPerClick")) || 1;
         let businessLevel = parseInt(localStorage.getItem("businessLevel")) || 1;
         let upgradeCost = parseInt(localStorage.getItem("upgradeCost")) || 50;
+        let conveyorCount = parseInt(localStorage.getItem("conveyorCount")) || 0;
+        let conveyorIncome = parseInt(localStorage.getItem("conveyorIncome")) || 0;
+        let conveyorCost = parseInt(localStorage.getItem("conveyorCost")) || 100;
         let selectedBusiness = localStorage.getItem("selectedBusiness");
         let doctorIncomeInterval;
+        let conveyorInterval;
         let doctorIncomeRate = 15;
 
         const moneyDisplay = document.getElementById("money");
         const moneyPerClickDisplay = document.getElementById("money-per-click");
         const businessLevelDisplay = document.getElementById("business-level");
         const upgradeCostDisplay = document.getElementById("upgrade-cost");
+        const conveyorCostDisplay = document.getElementById("conveyor-cost");
+        const conveyorCountDisplay = document.getElementById("conveyor-count");
+        const conveyorIncomeDisplay = document.getElementById("conveyor-income");
         const businessSelectionScreen = document.getElementById("business-selection");
         const gameScreen = document.getElementById("game-container");
 
@@ -120,6 +128,9 @@
             localStorage.setItem("moneyPerClick", moneyPerClick);
             localStorage.setItem("businessLevel", businessLevel);
             localStorage.setItem("upgradeCost", upgradeCost);
+            localStorage.setItem("conveyorCount", conveyorCount);
+            localStorage.setItem("conveyorIncome", conveyorIncome);
+            localStorage.setItem("conveyorCost", conveyorCost);
             localStorage.setItem("selectedBusiness", selectedBusiness);
         }
 
@@ -130,6 +141,9 @@
                 : moneyPerClick;
             businessLevelDisplay.textContent = businessLevel;
             upgradeCostDisplay.textContent = upgradeCost;
+            conveyorCostDisplay.textContent = conveyorCost;
+            conveyorCountDisplay.textContent = conveyorCount;
+            conveyorIncomeDisplay.textContent = conveyorIncome;
         }
 
         function showBusinessSelectionScreen() {
@@ -141,6 +155,7 @@
             businessSelectionScreen.style.display = "none";
             gameScreen.style.display = "block";
             if (selectedBusiness === 'doctor') startDoctorIncome();
+            startConveyorIncome();
         }
 
         function startDoctorIncome() {
@@ -157,8 +172,14 @@
             }, doctorIncomeRate * 1000);
         }
 
-        function stopDoctorIncome() {
-            if (doctorIncomeInterval) clearInterval(doctorIncomeInterval);
+        function startConveyorIncome() {
+            if (conveyorInterval) clearInterval(conveyorInterval);
+            conveyorInterval = setInterval(() => {
+                const incomePerConveyor = selectedBusiness === 'tech' ? 2 : 1;
+                money += conveyorCount * incomePerConveyor;
+                saveGame();
+                updateDisplay();
+            }, 1000);
         }
 
         document.getElementById("select-bakery").addEventListener("click", () => {
@@ -167,8 +188,8 @@
             showGameScreen();
         });
 
-        document.getElementById("select-doctor").addEventListener("click", () => {
-            selectedBusiness = "doctor";
+        document.getElementById("select-tech").addEventListener("click", () => {
+            selectedBusiness = "tech";
             saveGame();
             showGameScreen();
         });
@@ -196,13 +217,30 @@
             }
         });
 
+        document.getElementById("buy-conveyor").addEventListener("click", () => {
+            if (money >= conveyorCost) {
+                money -= conveyorCost;
+                conveyorCount++;
+                conveyorIncome += selectedBusiness === 'tech' ? 2 : 1;
+                conveyorCost *= 2;
+                saveGame();
+                updateDisplay();
+            } else {
+                alert("Not enough money to buy a conveyor belt!");
+            }
+        });
+
         document.getElementById("reset-game").addEventListener("click", () => {
             money = 0;
             businessLevel = 1;
             moneyPerClick = 1;
             upgradeCost = 50;
+            conveyorCount = 0;
+            conveyorIncome = 0;
+            conveyorCost = 100;
             selectedBusiness = null;
-            stopDoctorIncome();
+            clearInterval(conveyorInterval);
+            clearInterval(doctorIncomeInterval);
             saveGame();
             showBusinessSelectionScreen();
         });
