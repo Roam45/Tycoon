@@ -208,7 +208,7 @@
             if (selectedBusiness === 'doctor') startDoctorIncome(); // Start idle rewards if Doctor is selected
         }
 
-        // Function to handle casino game (10% chance to win for normal, 30% for supermarket)
+        // Function to handle casino game (40% chance to win for supermarket)
         function playCasino(betAmount) {
             if (betAmount <= 0 || betAmount > money) {
                 casinoResult.textContent = "Please enter a valid bet amount!";
@@ -216,14 +216,14 @@
             }
 
             // Set chance based on business type
-            let chance = selectedBusiness === 'supermarket' ? 0.30 : 0.10;
+            let chance = selectedBusiness === 'supermarket' ? 0.40 : (selectedBusiness === 'doctor' ? 0 : 0.10); // 40% for Supermarket, 10% for other businesses
 
             if (Math.random() < chance) {
                 money += betAmount;
-                casinoResult.textContent = `You won! You bet $${betAmount}.`;
+                casinoResult.textContent = `You won $${betAmount}!`;
             } else {
                 money -= betAmount;
-                casinoResult.textContent = `You lost! You bet $${betAmount}.`;
+                casinoResult.textContent = `You lost $${betAmount}.`;
             }
 
             saveGame();
@@ -232,17 +232,22 @@
 
         // Doctor income logic (Idle rewards)
         function startDoctorIncome() {
-            if (doctorIncomeInterval) clearInterval(doctorIncomeInterval); // Prevent multiple intervals
             doctorIncomeInterval = setInterval(() => {
-                let income = 100 * businessLevel; // $100 per level
-                money += income;
+                money += doctorIncomeRate * businessLevel;
                 saveGame();
                 updateDisplay();
-            }, doctorIncomeRate * 1000);
+            }, 15000); // Earn income every 15 seconds
         }
 
-        // Event listeners for game actions
+        // Event listeners
+        document.getElementById("select-bakery").addEventListener("click", () => { selectBusiness('bakery'); });
+        document.getElementById("select-tech").addEventListener("click", () => { selectBusiness('tech'); });
+        document.getElementById("select-corner-shop").addEventListener("click", () => { selectBusiness('corner-shop'); });
+        document.getElementById("select-supermarket").addEventListener("click", () => { selectBusiness('supermarket'); });
+        document.getElementById("select-doctor").addEventListener("click", () => { selectBusiness('doctor'); });
+
         earnMoneyButton.addEventListener("click", () => {
+            if (selectedBusiness === 'doctor') return; // Doctor does not earn money from clicking
             money += moneyPerClick;
             saveGame();
             updateDisplay();
@@ -252,8 +257,8 @@
             if (money >= upgradeCost) {
                 money -= upgradeCost;
                 businessLevel++;
-                moneyPerClick = businessLevel;
-                upgradeCost = Math.round(upgradeCost * 1.5);
+                moneyPerClick *= 2;
+                upgradeCost *= 1.5; // Increase upgrade cost by 50%
                 saveGame();
                 updateDisplay();
             }
@@ -263,8 +268,8 @@
             if (money >= conveyorCost) {
                 money -= conveyorCost;
                 conveyorCount++;
-                conveyorIncome += 1; // Earn 1 per conveyor, except for tech (which is 2)
-                conveyorCost *= 2; // Each conveyor belt costs twice the previous one
+                conveyorIncome += businessLevel * 5; // Increase income by level
+                conveyorCost *= 1.5; // Increase conveyor cost by 50%
                 saveGame();
                 updateDisplay();
             }
@@ -275,60 +280,31 @@
             playCasino(betAmount);
         });
 
-        // Reset game button action
         resetGameButton.addEventListener("click", () => {
-            money = 0;
-            businessLevel = 1;
-            moneyPerClick = 1;
-            upgradeCost = 50;
-            conveyorCount = 0;
-            conveyorIncome = 0;
-            selectedBusiness = null;
-
-            // Clear saved data
-            localStorage.clear();
-
-            // Stop any running intervals
-            clearInterval(doctorIncomeInterval);
-
-            // Show the business selection screen
-            showBusinessSelectionScreen();
+            if (money >= resetCost) {
+                money = 0;
+                moneyPerClick = 1;
+                businessLevel = 1;
+                conveyorCount = 0;
+                conveyorIncome = 0;
+                upgradeCost = 50;
+                conveyorCost = 100;
+                saveGame();
+                updateDisplay();
+            }
         });
 
-        // Business selection button actions
-        document.getElementById("select-bakery").addEventListener("click", () => {
-            selectedBusiness = 'bakery';
+        // Select a business and start the game
+        function selectBusiness(business) {
+            selectedBusiness = business;
+            localStorage.setItem("selectedBusiness", selectedBusiness);
             showGameScreen();
-        });
-
-        document.getElementById("select-tech").addEventListener("click", () => {
-            selectedBusiness = 'tech';
-            showGameScreen();
-        });
-
-        document.getElementById("select-corner-shop").addEventListener("click", () => {
-            selectedBusiness = 'corner-shop';
-            showGameScreen();
-        });
-
-        document.getElementById("select-supermarket").addEventListener("click", () => {
-            selectedBusiness = 'supermarket';
-            showGameScreen();
-        });
-
-        document.getElementById("select-doctor").addEventListener("click", () => {
-            selectedBusiness = 'doctor';
-            showGameScreen();
-        });
-
-        // Initialize game
-        if (selectedBusiness) {
-            showGameScreen();
-        } else {
-            showBusinessSelectionScreen();
+            updateDisplay();
         }
 
-        updateDisplay();
+        // Initialize game
+        if (!selectedBusiness) showBusinessSelectionScreen();
+        else showGameScreen();
     </script>
 </body>
 </html>
