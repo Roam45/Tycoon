@@ -63,29 +63,21 @@
   </header>
 
   <main>
+    <section id="earn-money">
+      <h2>Earn Money</h2>
+      <button id="earnMoney">Earn $1</button>
+    </section>
+
     <section id="businesses">
-      <h2>Businesses</h2>
-      <button class="business" data-cost="100" data-income="10" id="buyBakery">
-        Buy Bakery (Cost: 100, Income: 10/s)
-      </button>
-      <button class="business" data-cost="500" data-income="50" id="buyFactory">
-        Buy Factory (Cost: 500, Income: 50/s)
-      </button>
+      <h2>Buy Conveyors</h2>
+      <button id="buyConveyor" data-cost="100">Buy Conveyor ($100)</button>
+      <p id="conveyorInfo">Conveyors Owned: 0 | Income per second: $0</p>
     </section>
 
-    <section id="conveyor">
-      <h2>Conveyor</h2>
-      <div id="belt">
-        <div class="item"></div>
-        <div class="item"></div>
-        <div class="item"></div>
-      </div>
-    </section>
-
-    <section id="gambling">
-      <h2>Gambling</h2>
-      <button id="rollDice">Roll Dice (Bet 50)</button>
-      <p id="gambleResult"></p>
+    <section id="upgrade">
+      <h2>Upgrade Business</h2>
+      <button id="upgradeBusiness" data-cost="500">Upgrade Business ($500)</button>
+      <p id="upgradeInfo">Money per click: $1</p>
     </section>
 
     <section id="reset">
@@ -96,38 +88,86 @@
 
   <script>
     let money = 0;
+    let conveyorsOwned = 0;
+    let conveyorBaseCost = 100;
+    let conveyorIncomePerSecond = 1;
     let incomePerSecond = 0;
+    let moneyPerClick = 1;
+    let upgradeCost = 500;
 
     // Load saved progress
     function loadGame() {
       const savedMoney = localStorage.getItem("money");
+      const savedConveyors = localStorage.getItem("conveyorsOwned");
       const savedIncome = localStorage.getItem("incomePerSecond");
+      const savedMoneyPerClick = localStorage.getItem("moneyPerClick");
+      const savedUpgradeCost = localStorage.getItem("upgradeCost");
+
       if (savedMoney) money = parseInt(savedMoney);
+      if (savedConveyors) conveyorsOwned = parseInt(savedConveyors);
       if (savedIncome) incomePerSecond = parseInt(savedIncome);
+      if (savedMoneyPerClick) moneyPerClick = parseInt(savedMoneyPerClick);
+      if (savedUpgradeCost) upgradeCost = parseInt(savedUpgradeCost);
+
       updateUI();
     }
 
     // Save progress
     function saveGame() {
       localStorage.setItem("money", money);
+      localStorage.setItem("conveyorsOwned", conveyorsOwned);
       localStorage.setItem("incomePerSecond", incomePerSecond);
-    }
-
-    // Reset progress
-    function resetGame() {
-      money = 0;
-      incomePerSecond = 0;
-      localStorage.clear(); // Clear all saved data
-      updateUI();
-      alert("Game progress has been reset!");
+      localStorage.setItem("moneyPerClick", moneyPerClick);
+      localStorage.setItem("upgradeCost", upgradeCost);
     }
 
     // Update UI
     function updateUI() {
       document.getElementById("money").textContent = money;
+      document.getElementById("conveyorInfo").textContent = 
+        `Conveyors Owned: ${conveyorsOwned} | Income per second: $${incomePerSecond}`;
+      const nextCost = conveyorBaseCost * Math.pow(2, conveyorsOwned);
+      document.getElementById("buyConveyor").textContent = `Buy Conveyor ($${nextCost})`;
+
+      document.getElementById("upgradeInfo").textContent = `Money per click: $${moneyPerClick}`;
+      document.getElementById("upgradeBusiness").textContent = `Upgrade Business ($${upgradeCost})`;
     }
 
-    // Add money periodically
+    // Earn money button
+    document.getElementById("earnMoney").addEventListener("click", () => {
+      money += moneyPerClick;
+      saveGame();
+      updateUI();
+    });
+
+    // Buy conveyor button
+    document.getElementById("buyConveyor").addEventListener("click", () => {
+      const cost = conveyorBaseCost * Math.pow(2, conveyorsOwned);
+      if (money >= cost) {
+        money -= cost;
+        conveyorsOwned += 1;
+        incomePerSecond += conveyorIncomePerSecond;
+        saveGame();
+        updateUI();
+      } else {
+        alert("Not enough money!");
+      }
+    });
+
+    // Upgrade business button
+    document.getElementById("upgradeBusiness").addEventListener("click", () => {
+      if (money >= upgradeCost) {
+        money -= upgradeCost;
+        moneyPerClick *= 2; // Double the money per click
+        upgradeCost *= 2; // Double the cost of next upgrade
+        saveGame();
+        updateUI();
+      } else {
+        alert("Not enough money!");
+      }
+    });
+
+    // Generate income from conveyors
     function generateIncome() {
       money += incomePerSecond;
       saveGame();
@@ -135,42 +175,17 @@
     }
     setInterval(generateIncome, 1000);
 
-    // Buy businesses
-    document.querySelectorAll(".business").forEach(button => {
-      button.addEventListener("click", () => {
-        const cost = parseInt(button.getAttribute("data-cost"));
-        const income = parseInt(button.getAttribute("data-income"));
-        if (money >= cost) {
-          money -= cost;
-          incomePerSecond += income;
-          saveGame();
-          updateUI();
-        } else {
-          alert("Not enough money!");
-        }
-      });
+    // Reset progress
+    document.getElementById("resetGame").addEventListener("click", () => {
+      money = 0;
+      conveyorsOwned = 0;
+      incomePerSecond = 0;
+      moneyPerClick = 1;
+      upgradeCost = 500;
+      localStorage.clear();
+      updateUI();
+      alert("Game progress has been reset!");
     });
-
-    // Gambling - Roll Dice
-    document.getElementById("rollDice").addEventListener("click", () => {
-      if (money >= 50) {
-        money -= 50;
-        const diceRoll = Math.floor(Math.random() * 6) + 1;
-        if (diceRoll > 3) {
-          money += 100;
-          document.getElementById("gambleResult").textContent = `You rolled a ${diceRoll}. You won 100!`;
-        } else {
-          document.getElementById("gambleResult").textContent = `You rolled a ${diceRoll}. You lost!`;
-        }
-        saveGame();
-        updateUI();
-      } else {
-        alert("Not enough money to gamble!");
-      }
-    });
-
-    // Reset button functionality
-    document.getElementById("resetGame").addEventListener("click", resetGame);
 
     // Load the game on start
     loadGame();
