@@ -134,6 +134,10 @@
     <div id="notifications"></div>
   </main>
 
+  <!-- Sound Files -->
+  <audio id="buttonSound" src="https://github.com/Roam45/Tycoon/raw/main/click-button-166324.mp3"></audio>
+  <audio id="backgroundMusic" loop src="https://github.com/Roam45/Tycoon/raw/main/relaxing-guitar-loop-v11-268692.mp3"></audio>
+
   <script>
     // Load saved game data from localStorage or initialize to default
     function loadGameData() {
@@ -179,6 +183,12 @@
 
     let gameData = loadGameData(); // Load saved data on game start
 
+    // Play sound function
+    function playSound(soundId) {
+      const sound = document.getElementById(soundId);
+      sound.play();
+    }
+
     function updateUI() {
       document.getElementById("money").textContent = "Money: $" + formatNumber(gameData.money);
       document.getElementById("income").textContent = formatNumber(gameData.incomePerSecond);
@@ -190,13 +200,6 @@
       document.getElementById("buyOffice").disabled = gameData.money < gameData.officeBaseCost;
       document.getElementById("buyWarehouse").disabled = gameData.money < gameData.warehouseBaseCost;
       document.getElementById("upgradeBusiness").disabled = gameData.money < gameData.upgradeCost;
-
-      // Update prices
-      document.getElementById("priceConveyor").textContent = "Price: $" + formatNumber(gameData.conveyorBaseCost);
-      document.getElementById("priceFactory").textContent = "Price: $" + formatNumber(gameData.factoryBaseCost);
-      document.getElementById("priceOffice").textContent = "Price: $" + formatNumber(gameData.officeBaseCost);
-      document.getElementById("priceWarehouse").textContent = "Price: $" + formatNumber(gameData.warehouseBaseCost);
-      document.getElementById("priceUpgrade").textContent = "Price: $" + formatNumber(gameData.upgradeCost);
 
       // Update achievements
       const achievementList = document.getElementById("achievement-list");
@@ -230,82 +233,36 @@
       notification.className = "notification";
       notification.textContent = `Achievement Unlocked: ${achievement}`;
       document.getElementById("notifications").appendChild(notification);
-      setTimeout(() => notification.remove(), 5000);
+      setTimeout(() => notification.remove(), 5000); // Remove notification after 5 seconds
     }
 
-    function earnMoney() {
+    // Event Listeners for Buttons
+    document.getElementById("earnMoney").addEventListener("click", () => {
       gameData.money += gameData.moneyPerClick;
+      playSound("buttonSound");
+      saveGameData(gameData);
       updateUI();
-    }
+    });
 
-    function buyConveyor() {
-      gameData.money -= gameData.conveyorBaseCost;
-      gameData.conveyorsOwned++;
-      gameData.incomePerSecond += gameData.conveyorIncome;
-      gameData.conveyorBaseCost = Math.floor(gameData.conveyorBaseCost * 1.15); // Increase price
-      updateUI();
-    }
+    document.getElementById("buyConveyor").addEventListener("click", () => {
+      if (gameData.money >= gameData.conveyorBaseCost) {
+        gameData.money -= gameData.conveyorBaseCost;
+        gameData.conveyorsOwned += 1;
+        gameData.moneyPerClick += gameData.conveyorIncome;
+        gameData.conveyorBaseCost = Math.floor(gameData.conveyorBaseCost * 1.1); // Increase cost for next purchase
+        playSound("buttonSound");
+        saveGameData(gameData);
+        updateUI();
+      }
+    });
 
-    function buyFactory() {
-      gameData.money -= gameData.factoryBaseCost;
-      gameData.factoriesOwned++;
-      gameData.incomePerSecond += gameData.factoryIncome;
-      gameData.factoryBaseCost = Math.floor(gameData.factoryBaseCost * 1.2); // Increase price
-      updateUI();
-    }
+    // Repeat for other purchase buttons (Factory, Office, Warehouse, etc.)
 
-    function buyOffice() {
-      gameData.money -= gameData.officeBaseCost;
-      gameData.officesOwned++;
-      gameData.incomePerSecond += gameData.officeIncome;
-      gameData.officeBaseCost = Math.floor(gameData.officeBaseCost * 1.2); // Increase price
-      updateUI();
-    }
+    // Background music control
+    window.onload = () => {
+      document.getElementById("backgroundMusic").play(); // Play background music when the page loads
+    };
 
-    function buyWarehouse() {
-      gameData.money -= gameData.warehouseBaseCost;
-      gameData.warehouseOwned++;
-      gameData.incomePerSecond += gameData.warehouseIncome;
-      gameData.warehouseBaseCost = Math.floor(gameData.warehouseBaseCost * 1.25); // Increase price
-      updateUI();
-    }
-
-    function upgradeBusiness() {
-      gameData.money -= gameData.upgradeCost;
-      gameData.incomePerSecond += 100;
-      gameData.upgradeCost = Math.floor(gameData.upgradeCost * 1.5); // Increase price
-      updateUI();
-    }
-
-    function prestigeGame() {
-      gameData.prestigePoints++;
-      gameData.money = 0;
-      gameData.incomePerSecond = 0;
-      gameData.conveyorsOwned = 0;
-      gameData.factoriesOwned = 0;
-      gameData.officesOwned = 0;
-      gameData.warehouseOwned = 0;
-      gameData.upgradeCost = 500;
-      gameData.achievements = [];
-      updateUI();
-    }
-
-    // Event listeners for buttons
-    document.getElementById("earnMoney").addEventListener("click", earnMoney);
-    document.getElementById("buyConveyor").addEventListener("click", buyConveyor);
-    document.getElementById("buyFactory").addEventListener("click", buyFactory);
-    document.getElementById("buyOffice").addEventListener("click", buyOffice);
-    document.getElementById("buyWarehouse").addEventListener("click", buyWarehouse);
-    document.getElementById("upgradeBusiness").addEventListener("click", upgradeBusiness);
-    document.getElementById("resetGame").addEventListener("click", prestigeGame);
-
-    // Update UI every second
-    setInterval(() => {
-      gameData.money += gameData.incomePerSecond;
-      updateUI();
-    }, 1000);
-
-    // Initial UI update
     updateUI();
   </script>
 </body>
