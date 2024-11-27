@@ -6,113 +6,85 @@
   <title>Business Tycoon</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    /* Basic styles, same as before */
-    /* Styling the background, buttons, and layout */
     body {
       font-family: 'Poppins', sans-serif;
       margin: 0;
       padding: 0;
+      background: linear-gradient(135deg, #1e90ff, #00bfff);
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      background: linear-gradient(120deg, #1c92d2, #f2fcfe);
-      height: 100vh;
-      color: #333;
+      min-height: 100vh;
+      color: #fff;
     }
 
     main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 90%;
-      max-width: 800px;
-    }
-
-    section {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      margin: 20px 0;
-      width: 100%;
-      max-width: 400px;
       text-align: center;
+      width: 100%;
+      max-width: 900px;
+      padding: 20px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     }
 
     h1 {
-      font-size: 2rem;
-      color: #333;
-      margin-bottom: 10px;
-    }
-
-    #money {
-      font-size: 1.5rem;
-      color: #1c92d2;
+      font-size: 3rem;
+      color: #fff;
       margin-bottom: 20px;
     }
 
+    #money {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .button-box {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
     button {
-      background: linear-gradient(90deg, #6a11cb, #2575fc);
+      background: #0078d4;
       color: white;
-      font-size: 1rem;
-      font-weight: bold;
+      font-size: 1.2rem;
+      padding: 15px 30px;
       border: none;
-      border-radius: 5px;
-      padding: 10px 20px;
-      margin: 10px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      display: block;
-      width: calc(100% - 40px);
+      transition: background 0.3s ease;
+      width: 100%;
+      max-width: 250px;
+      margin: 5px auto;
     }
 
     button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+      background: #005fa3;
     }
 
     button:disabled {
       background: #aaa;
-      cursor: not-allowed;
-    }
-
-    #button-box {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .tooltip {
-      position: relative;
-      cursor: pointer;
-    }
-
-    .tooltip:hover::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: -25px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #333;
-      color: white;
-      padding: 5px;
-      font-size: 0.8rem;
-      border-radius: 3px;
-      white-space: nowrap;
     }
 
     #achievements {
-      margin-top: 20px;
-      text-align: left;
+      margin-top: 40px;
+    }
+
+    #achievements h2 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      color: #fff;
     }
 
     .achievement {
-      margin: 5px 0;
-      padding: 5px;
-      background: #e8f0fe;
+      font-size: 1.1rem;
+      background: #4caf50;
+      color: #fff;
+      padding: 10px;
       border-radius: 5px;
+      margin: 5px 0;
+      display: inline-block;
     }
 
     .unlocked {
@@ -121,27 +93,29 @@
 
     .notification {
       background: #ffd700;
-      padding: 10px;
-      border-radius: 5px;
-      margin: 10px 0;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 1.2rem;
     }
   </style>
 </head>
 <body>
   <main>
-    <section>
-      <h1>Business Tycoon</h1>
-      <p>Money: <span id="money">0</span></p>
-      <p>Income per Second: <span id="income">0</span></p>
-      <div id="button-box">
-        <button id="earnMoney" class="tooltip" data-tooltip="Click to earn money">Earn Money</button>
-        <button id="buyConveyor" data-cost="100">Buy Conveyor ($100)</button>
-        <button id="buyFactory" data-cost="1000">Buy Factory ($1000)</button>
-        <button id="buyOffice" data-cost="2000">Buy Office ($2000)</button>
-        <button id="upgradeBusiness" data-cost="500">Upgrade Business ($500)</button>
-        <button id="resetGame">Reset Progress</button>
-      </div>
-    </section>
+    <h1>Business Tycoon</h1>
+    <p id="money">Money: $0</p>
+    <p>Income per Second: $<span id="income">0</span></p>
+    <p>Prestige Points: <span id="prestige">0</span></p>
+
+    <div class="button-box">
+      <button id="earnMoney">Earn Money</button>
+      <button id="buyConveyor">Buy Conveyor ($100)</button>
+      <button id="buyFactory">Buy Factory ($1000)</button>
+      <button id="buyOffice">Buy Office ($2000)</button>
+      <button id="buyWarehouse">Buy Warehouse ($5000)</button>
+      <button id="upgradeBusiness">Upgrade Business ($500)</button>
+      <button id="resetGame">Prestige (Reset)</button>
+    </div>
 
     <section id="achievements">
       <h2>Achievements</h2>
@@ -151,33 +125,31 @@
   </main>
 
   <script>
-    // Core variables
     let money = 0;
     let incomePerSecond = 0;
     let moneyPerClick = 1;
-
     let conveyorsOwned = 0;
     let conveyorBaseCost = 100;
     let conveyorIncome = 1;
-
     let factoriesOwned = 0;
     let factoryBaseCost = 1000;
     let factoryIncome = 10;
-
     let officesOwned = 0;
     let officeBaseCost = 2000;
     let officeIncome = 20;
-
-    let upgradeCost = 500;
+    let warehouseOwned = 0;
+    let warehouseBaseCost = 5000;
+    let warehouseIncome = 50;
     let prestigePoints = 0;
+    let upgradeCost = 500;
 
     const achievements = [
       { name: "First Click!", condition: () => money >= 1 },
       { name: "100 Bucks", condition: () => money >= 100 },
       { name: "First Conveyor", condition: () => conveyorsOwned >= 1 },
       { name: "First Factory", condition: () => factoriesOwned >= 1 },
-      { name: "Millionaire", condition: () => money >= 1000000 },
       { name: "First Office", condition: () => officesOwned >= 1 },
+      { name: "Millionaire", condition: () => money >= 1000000 },
       { name: "Prestige Master", condition: () => prestigePoints >= 1 }
     ];
 
@@ -189,8 +161,16 @@
     }
 
     function updateUI() {
-      document.getElementById("money").textContent = formatNumber(money);
+      document.getElementById("money").textContent = "Money: $" + formatNumber(money);
       document.getElementById("income").textContent = formatNumber(incomePerSecond);
+      document.getElementById("prestige").textContent = prestigePoints;
+      
+      // Enable/Disable buttons based on money
+      document.getElementById("buyConveyor").disabled = money < conveyorBaseCost;
+      document.getElementById("buyFactory").disabled = money < factoryBaseCost;
+      document.getElementById("buyOffice").disabled = money < officeBaseCost;
+      document.getElementById("buyWarehouse").disabled = money < warehouseBaseCost;
+      document.getElementById("upgradeBusiness").disabled = money < upgradeCost;
 
       const achievementList = document.getElementById("achievement-list");
       achievementList.innerHTML = "";
@@ -203,77 +183,79 @@
       });
     }
 
-    // Earn money per click
     document.getElementById("earnMoney").addEventListener("click", () => {
       money += moneyPerClick;
       updateUI();
     });
 
-    // Buy conveyors
     document.getElementById("buyConveyor").addEventListener("click", () => {
-      const cost = conveyorBaseCost * Math.pow(2, conveyorsOwned);
-      if (money >= cost) {
-        money -= cost;
+      if (money >= conveyorBaseCost) {
+        money -= conveyorBaseCost;
         conveyorsOwned++;
         incomePerSecond += conveyorIncome;
+        conveyorBaseCost = Math.floor(conveyorBaseCost * 1.5); // Increase cost for next purchase
         updateUI();
       }
     });
 
-    // Buy factories
     document.getElementById("buyFactory").addEventListener("click", () => {
-      const cost = factoryBaseCost * Math.pow(2, factoriesOwned);
-      if (money >= cost) {
-        money -= cost;
+      if (money >= factoryBaseCost) {
+        money -= factoryBaseCost;
         factoriesOwned++;
         incomePerSecond += factoryIncome;
+        factoryBaseCost = Math.floor(factoryBaseCost * 1.5);
         updateUI();
       }
     });
 
-    // Buy offices
     document.getElementById("buyOffice").addEventListener("click", () => {
-      const cost = officeBaseCost * Math.pow(2, officesOwned);
-      if (money >= cost) {
-        money -= cost;
+      if (money >= officeBaseCost) {
+        money -= officeBaseCost;
         officesOwned++;
         incomePerSecond += officeIncome;
+        officeBaseCost = Math.floor(officeBaseCost * 1.5);
         updateUI();
       }
     });
 
-    // Upgrade business
+    document.getElementById("buyWarehouse").addEventListener("click", () => {
+      if (money >= warehouseBaseCost) {
+        money -= warehouseBaseCost;
+        warehouseOwned++;
+        incomePerSecond += warehouseIncome;
+        warehouseBaseCost = Math.floor(warehouseBaseCost * 1.5);
+        updateUI();
+      }
+    });
+
     document.getElementById("upgradeBusiness").addEventListener("click", () => {
       if (money >= upgradeCost) {
         money -= upgradeCost;
-        upgradeCost *= 2;
-        moneyPerClick *= 2;
+        upgradeCost = Math.floor(upgradeCost * 2); // Double upgrade cost each time
+        moneyPerClick *= 2; // Double money per click
         updateUI();
       }
     });
 
-    // Reset game
     document.getElementById("resetGame").addEventListener("click", () => {
       if (confirm("Are you sure you want to reset your progress?")) {
         prestigePoints++;
         money = 0;
         incomePerSecond = 0;
-        moneyPerClick = 1;
         conveyorsOwned = 0;
         factoriesOwned = 0;
         officesOwned = 0;
-        upgradeCost = 500;
+        warehouseOwned = 0;
         updateUI();
       }
     });
 
-    // Passive income
     setInterval(() => {
       money += incomePerSecond;
       updateUI();
     }, 1000);
 
-    // Initialize UI
+    // Initialize game
     updateUI();
   </script>
 </body>
