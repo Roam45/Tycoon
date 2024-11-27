@@ -1,212 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tycoon Game</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: linear-gradient(45deg, #ff7f50, #ff6347, #ff4500, #ff8c00);
-            background-size: 400% 400%;
-            animation: gradientShift 10s ease infinite;
-            padding: 50px 0;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Tycoon</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
 
-        .game-container {
-            text-align: center;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 500px;
-        }
+    header {
+      background-color: #333;
+      color: white;
+      padding: 10px 0;
+    }
 
-        h1 {
-            color: #2c3e50;
-        }
+    main {
+      padding: 20px;
+    }
 
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px;
-            margin: 10px;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 16px;
-        }
+    button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
 
-        button:hover {
-            background-color: #2980b9;
-        }
+    #belt {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      height: 50px;
+      background-color: #ddd;
+      overflow: hidden;
+      position: relative;
+    }
 
-        #money {
-            font-size: 24px;
-            margin: 20px 0;
-            color: #27ae60;
-        }
+    .item {
+      width: 50px;
+      height: 50px;
+      background-color: #4caf50;
+      margin-right: 10px;
+      animation: move 3s linear infinite;
+    }
 
-        #casino-result {
-            margin: 20px 0;
-            color: #e74c3c;
-        }
-
-        .business-selection {
-            display: none;
-        }
-    </style>
+    @keyframes move {
+      0% {
+        transform: translateX(100%);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+  </style>
 </head>
 <body>
-    <!-- Business Selection Screen -->
-    <div class="business-selection" id="business-selection">
-        <h1>Select Your Business</h1>
-        <button id="select-bakery">Bakery</button>
-        <button id="select-tech">Tech</button>
-        <button id="select-corner-shop">Corner Shop</button>
-        <button id="select-supermarket">Supermarket</button>
-        <button id="select-doctor">Doctor</button>
-    </div>
+  <header>
+    <h1>Business Tycoon</h1>
+    <p>Money: <span id="money">0</span></p>
+  </header>
 
-    <!-- Game Screen -->
-    <div class="game-container" id="game-container" style="display: none;">
-        <h1>Tycoon Game</h1>
-        <div id="money">Money: $0</div>
+  <main>
+    <section id="businesses">
+      <h2>Businesses</h2>
+      <button class="business" data-cost="100" data-income="10" id="buyBakery">
+        Buy Bakery (Cost: 100, Income: 10/s)
+      </button>
+      <button class="business" data-cost="500" data-income="50" id="buyFactory">
+        Buy Factory (Cost: 500, Income: 50/s)
+      </button>
+    </section>
 
-        <div id="business">
-            <h2>Your Business</h2>
-            <button id="earn-money">Earn Money</button>
-            <button id="upgrade">Upgrade Business</button>
-            <p>Upgrade Cost: $<span id="upgrade-cost">50</span></p>
-        </div>
+    <section id="conveyor">
+      <h2>Conveyor</h2>
+      <div id="belt">
+        <div class="item"></div>
+        <div class="item"></div>
+        <div class="item"></div>
+      </div>
+    </section>
 
-        <div id="casino">
-            <h2>Casino</h2>
-            <input type="number" id="bet-amount" placeholder="Enter Bet Amount">
-            <button id="place-bet">Place Bet</button>
-            <div id="casino-result"></div>
-        </div>
+    <section id="gambling">
+      <h2>Gambling</h2>
+      <button id="rollDice">Roll Dice (Bet 50)</button>
+      <p id="gambleResult"></p>
+    </section>
 
-        <div id="reset-container">
-            <h2>Reset Game</h2>
-            <button id="reset-game">Reset Game (Costs $50)</button>
-        </div>
-    </div>
+    <section id="reset">
+      <h2>Reset Game</h2>
+      <button id="resetGame">Reset Progress</button>
+    </section>
+  </main>
 
-    <script>
-        // Game Variables
-        let money = parseInt(localStorage.getItem("money")) || 0;
-        let moneyPerClick = parseInt(localStorage.getItem("moneyPerClick")) || 1;
-        let businessLevel = parseInt(localStorage.getItem("businessLevel")) || 1;
-        let upgradeCost = parseInt(localStorage.getItem("upgradeCost")) || 50;
-        let selectedBusiness = localStorage.getItem("selectedBusiness");
+  <script>
+    let money = 0;
+    let incomePerSecond = 0;
 
-        // DOM Elements
-        const moneyDisplay = document.getElementById("money");
-        const upgradeCostDisplay = document.getElementById("upgrade-cost");
-        const casinoResult = document.getElementById("casino-result");
-        const betAmountInput = document.getElementById("bet-amount");
+    // Load saved progress
+    function loadGame() {
+      const savedMoney = localStorage.getItem("money");
+      const savedIncome = localStorage.getItem("incomePerSecond");
+      if (savedMoney) money = parseInt(savedMoney);
+      if (savedIncome) incomePerSecond = parseInt(savedIncome);
+      updateUI();
+    }
 
-        // Functions to Update Display
-        function updateDisplay() {
-            moneyDisplay.textContent = `Money: $${money}`;
-            upgradeCostDisplay.textContent = upgradeCost;
-        }
+    // Save progress
+    function saveGame() {
+      localStorage.setItem("money", money);
+      localStorage.setItem("incomePerSecond", incomePerSecond);
+    }
 
-        // Save Game State
-        function saveGame() {
-            localStorage.setItem("money", money);
-            localStorage.setItem("moneyPerClick", moneyPerClick);
-            localStorage.setItem("businessLevel", businessLevel);
-            localStorage.setItem("upgradeCost", upgradeCost);
-            localStorage.setItem("selectedBusiness", selectedBusiness);
-        }
+    // Reset progress
+    function resetGame() {
+      money = 0;
+      incomePerSecond = 0;
+      localStorage.clear(); // Clear all saved data
+      updateUI();
+      alert("Game progress has been reset!");
+    }
 
-        // Casino Functionality
-        function playCasino(betAmount) {
-            if (betAmount <= 0 || betAmount > money || isNaN(betAmount)) {
-                casinoResult.textContent = "Invalid bet amount!";
-                return;
-            }
+    // Update UI
+    function updateUI() {
+      document.getElementById("money").textContent = money;
+    }
 
-            // Determine win chance
-            let winChance = 0.1; // Default 10% chance
-            if (selectedBusiness === "supermarket") winChance = 0.4; // Supermarket has 40% chance
-            if (selectedBusiness === "doctor") {
-                casinoResult.textContent = "Doctors cannot gamble!";
-                return;
-            }
+    // Add money periodically
+    function generateIncome() {
+      money += incomePerSecond;
+      saveGame();
+      updateUI();
+    }
+    setInterval(generateIncome, 1000);
 
-            // Win or lose logic
-            if (Math.random() < winChance) {
-                money += betAmount;
-                casinoResult.textContent = `You won $${betAmount}!`;
-            } else {
-                money -= betAmount;
-                casinoResult.textContent = `You lost $${betAmount}.`;
-            }
-
-            saveGame();
-            updateDisplay();
-        }
-
-        // Reset Game Functionality
-        function resetGame() {
-            if (money >= 50) {
-                // Reset all variables
-                money = 0;
-                moneyPerClick = 1;
-                businessLevel = 1;
-                upgradeCost = 50;
-                selectedBusiness = null;
-
-                // Clear localStorage
-                localStorage.clear();
-
-                // Restart game
-                showBusinessSelectionScreen();
-            } else {
-                alert("You need at least $50 to reset the game!");
-            }
-        }
-
-        // Event Listeners
-        document.getElementById("place-bet").addEventListener("click", () => {
-            const betAmount = parseInt(betAmountInput.value);
-            playCasino(betAmount);
-        });
-
-        document.getElementById("reset-game").addEventListener("click", resetGame);
-
-        // Business Selection Logic
-        function selectBusiness(business) {
-            selectedBusiness = business;
-            localStorage.setItem("selectedBusiness", selectedBusiness);
-            showGameScreen();
-        }
-
-        function showBusinessSelectionScreen() {
-            document.getElementById("business-selection").style.display = "block";
-            document.getElementById("game-container").style.display = "none";
-        }
-
-        function showGameScreen() {
-            document.getElementById("business-selection").style.display = "none";
-            document.getElementById("game-container").style.display = "block";
-            updateDisplay();
-        }
-
-        // Initialize Game
-        if (!selectedBusiness) {
-            showBusinessSelectionScreen();
+    // Buy businesses
+    document.querySelectorAll(".business").forEach(button => {
+      button.addEventListener("click", () => {
+        const cost = parseInt(button.getAttribute("data-cost"));
+        const income = parseInt(button.getAttribute("data-income"));
+        if (money >= cost) {
+          money -= cost;
+          incomePerSecond += income;
+          saveGame();
+          updateUI();
         } else {
-            showGameScreen();
+          alert("Not enough money!");
         }
-    </script>
+      });
+    });
+
+    // Gambling - Roll Dice
+    document.getElementById("rollDice").addEventListener("click", () => {
+      if (money >= 50) {
+        money -= 50;
+        const diceRoll = Math.floor(Math.random() * 6) + 1;
+        if (diceRoll > 3) {
+          money += 100;
+          document.getElementById("gambleResult").textContent = `You rolled a ${diceRoll}. You won 100!`;
+        } else {
+          document.getElementById("gambleResult").textContent = `You rolled a ${diceRoll}. You lost!`;
+        }
+        saveGame();
+        updateUI();
+      } else {
+        alert("Not enough money to gamble!");
+      }
+    });
+
+    // Reset button functionality
+    document.getElementById("resetGame").addEventListener("click", resetGame);
+
+    // Load the game on start
+    loadGame();
+  </script>
 </body>
 </html>
