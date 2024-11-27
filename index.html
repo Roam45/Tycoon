@@ -19,13 +19,19 @@
     }
 
     main {
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      gap: 40px;
       width: 100%;
-      max-width: 900px;
+      max-width: 1200px;
       padding: 20px;
       background-color: rgba(255, 255, 255, 0.1);
       border-radius: 15px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    section {
+      flex: 1;
     }
 
     h1 {
@@ -43,6 +49,9 @@
       display: flex;
       flex-direction: column;
       gap: 15px;
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto;
     }
 
     button {
@@ -54,9 +63,6 @@
       border-radius: 8px;
       cursor: pointer;
       transition: background 0.3s ease;
-      width: 100%;
-      max-width: 250px;
-      margin: 5px auto;
     }
 
     button:hover {
@@ -68,7 +74,7 @@
     }
 
     #achievements {
-      margin-top: 40px;
+      max-width: 300px;
     }
 
     #achievements h2 {
@@ -90,53 +96,32 @@
     .unlocked {
       background: #d4edda;
     }
-
-    .notification {
-      background: #ffd700;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 10px;
-      font-size: 1.2rem;
-    }
-
-    #price {
-      font-size: 1rem;
-      color: #fff;
-    }
   </style>
 </head>
 <body>
   <main>
-    <h1>Business Tycoon</h1>
-    <p id="money">Money: $0</p>
-    <p>Income per Second: $<span id="income">0</span></p>
-    <p>Prestige Points: <span id="prestige">0</span></p>
+    <section>
+      <h1>Business Tycoon</h1>
+      <p id="money">Money: $0</p>
+      <p>Income per Second: $<span id="income">0</span></p>
+      <p>Prestige Points: <span id="prestige">0</span></p>
 
-    <div class="button-box">
-      <button id="earnMoney">Earn Money</button>
-      <button id="buyConveyor">Buy Conveyor</button>
-      <p id="priceConveyor" class="price">Price: $100</p>
-      <button id="buyFactory">Buy Factory</button>
-      <p id="priceFactory" class="price">Price: $1000</p>
-      <button id="buyOffice">Buy Office</button>
-      <p id="priceOffice" class="price">Price: $2000</p>
-      <button id="buyWarehouse">Buy Warehouse</button>
-      <p id="priceWarehouse" class="price">Price: $5000</p>
-      <button id="upgradeBusiness">Upgrade Business</button>
-      <p id="priceUpgrade" class="price">Price: $500</p>
-      <button id="resetGame">Prestige (Reset)</button>
-    </div>
+      <div class="button-box">
+        <button id="earnMoney">Earn Money</button>
+        <button id="buyConveyor">Buy Conveyor ($100)</button>
+        <button id="buyFactory">Buy Factory ($1000)</button>
+        <button id="buyOffice">Buy Office ($2000)</button>
+        <button id="buyWarehouse">Buy Warehouse ($5000)</button>
+        <button id="upgradeBusiness">Upgrade Business ($500)</button>
+        <button id="rebirthGame">Rebirth (Reset)</button>
+      </div>
+    </section>
 
     <section id="achievements">
       <h2>Achievements</h2>
       <div id="achievement-list"></div>
     </section>
-    <div id="notifications"></div>
   </main>
-
-  <!-- Sound Files -->
-  <audio id="buttonSound" src="https://github.com/Roam45/Tycoon/raw/main/click-button-166324.mp3"></audio>
-  <audio id="backgroundMusic" loop src="https://github.com/Roam45/Tycoon/raw/main/relaxing-guitar-loop-v11-268692.mp3"></audio>
 
   <script>
     // Load saved game data from localStorage or initialize to default
@@ -151,19 +136,15 @@
           moneyPerClick: 1,
           conveyorsOwned: 0,
           conveyorBaseCost: 100,
-          conveyorIncome: 1,
           factoriesOwned: 0,
           factoryBaseCost: 1000,
-          factoryIncome: 10,
           officesOwned: 0,
           officeBaseCost: 2000,
-          officeIncome: 20,
           warehouseOwned: 0,
           warehouseBaseCost: 5000,
-          warehouseIncome: 50,
           prestigePoints: 0,
           upgradeCost: 500,
-          achievements: [] // Store unlocked achievements here
+          achievements: []
         };
       }
     }
@@ -173,7 +154,7 @@
       localStorage.setItem('gameData', JSON.stringify(data));
     }
 
-    // Format number for easier readability
+    // Format numbers for display
     function formatNumber(num) {
       if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
       if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
@@ -181,87 +162,57 @@
       return num;
     }
 
-    let gameData = loadGameData(); // Load saved data on game start
-
-    // Play sound function
-    function playSound(soundId) {
-      const sound = document.getElementById(soundId);
-      sound.play();
-    }
+    let gameData = loadGameData();
 
     function updateUI() {
       document.getElementById("money").textContent = "Money: $" + formatNumber(gameData.money);
       document.getElementById("income").textContent = formatNumber(gameData.incomePerSecond);
       document.getElementById("prestige").textContent = gameData.prestigePoints;
 
-      // Enable/Disable buttons based on money
-      document.getElementById("buyConveyor").disabled = gameData.money < gameData.conveyorBaseCost;
-      document.getElementById("buyFactory").disabled = gameData.money < gameData.factoryBaseCost;
-      document.getElementById("buyOffice").disabled = gameData.money < gameData.officeBaseCost;
-      document.getElementById("buyWarehouse").disabled = gameData.money < gameData.warehouseBaseCost;
-      document.getElementById("upgradeBusiness").disabled = gameData.money < gameData.upgradeCost;
-
-      // Update achievements
       const achievementList = document.getElementById("achievement-list");
       achievementList.innerHTML = "";
+
       const achievements = [
         { name: "First Click!", condition: () => gameData.money >= 1 },
         { name: "100 Bucks", condition: () => gameData.money >= 100 },
-        { name: "First Conveyor", condition: () => gameData.conveyorsOwned >= 1 },
-        { name: "First Factory", condition: () => gameData.factoriesOwned >= 1 },
-        { name: "First Office", condition: () => gameData.officesOwned >= 1 },
-        { name: "Millionaire", condition: () => gameData.money >= 1000000 },
-        { name: "Prestige Master", condition: () => gameData.prestigePoints >= 1 }
+        { name: "Millionaire", condition: () => gameData.money >= 1000000 }
       ];
 
-      achievements.forEach((achievement) => {
+      achievements.forEach(achievement => {
         const unlocked = achievement.condition();
         if (unlocked && !gameData.achievements.includes(achievement.name)) {
-          gameData.achievements.push(achievement.name); // Save unlocked achievements
+          gameData.achievements.push(achievement.name);
           saveGameData(gameData);
-          showAchievementNotification(achievement.name);
         }
         const div = document.createElement("div");
         div.textContent = achievement.name;
-        div.className = unlocked ? "achievement unlocked" : "achievement";
+        div.className = "achievement" + (unlocked ? " unlocked" : "");
         achievementList.appendChild(div);
       });
     }
 
-    function showAchievementNotification(achievement) {
-      const notification = document.createElement("div");
-      notification.className = "notification";
-      notification.textContent = `Achievement Unlocked: ${achievement}`;
-      document.getElementById("notifications").appendChild(notification);
-      setTimeout(() => notification.remove(), 5000); // Remove notification after 5 seconds
-    }
-
-    // Event Listeners for Buttons
     document.getElementById("earnMoney").addEventListener("click", () => {
       gameData.money += gameData.moneyPerClick;
-      playSound("buttonSound");
       saveGameData(gameData);
       updateUI();
     });
 
-    document.getElementById("buyConveyor").addEventListener("click", () => {
-      if (gameData.money >= gameData.conveyorBaseCost) {
-        gameData.money -= gameData.conveyorBaseCost;
-        gameData.conveyorsOwned += 1;
-        gameData.moneyPerClick += gameData.conveyorIncome;
-        gameData.conveyorBaseCost = Math.floor(gameData.conveyorBaseCost * 1.1); // Increase cost for next purchase
-        playSound("buttonSound");
+    document.getElementById("rebirthGame").addEventListener("click", () => {
+      if (confirm("Rebirth will reset progress but grant Prestige Points. Continue?")) {
+        gameData = {
+          ...loadGameData(),
+          prestigePoints: gameData.prestigePoints + 1
+        };
         saveGameData(gameData);
         updateUI();
       }
     });
 
-    // Repeat for other purchase buttons (Factory, Office, Warehouse, etc.)
-
-    // Background music control
-    window.onload = () => {
-      document.getElementById("backgroundMusic").play(); // Play background music when the page loads
-    };
+    setInterval(() => {
+      gameData.money += gameData.incomePerSecond;
+      saveGameData(gameData);
+      updateUI();
+    }, 1000);
 
     updateUI();
   </script>
