@@ -56,8 +56,13 @@
       border: none;
       border-radius: 5px;
       padding: 10px 20px;
+      margin: 10px;
       cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: block;
+      width: calc(100% - 40px); /* Ensure all buttons are the same width */
+      margin-left: auto;
+      margin-right: auto;
     }
 
     button:hover {
@@ -75,8 +80,10 @@
       color: #2575fc;
     }
 
-    h2 {
-      color: #444;
+    #button-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
   </style>
 </head>
@@ -87,26 +94,13 @@
   </header>
 
   <main>
-    <section id="earn-money">
-      <h2>Earn Money</h2>
-      <button id="earnMoney">Earn $1</button>
-    </section>
-
-    <section id="businesses">
-      <h2>Buy Conveyors</h2>
-      <button id="buyConveyor" data-cost="100">Buy Conveyor ($100)</button>
-      <p id="conveyorInfo">Conveyors Owned: 0 | Income per second: $0</p>
-    </section>
-
-    <section id="upgrade">
-      <h2>Upgrade Business</h2>
-      <button id="upgradeBusiness" data-cost="500">Upgrade Business ($500)</button>
-      <p id="upgradeInfo">Money per click: $1</p>
-    </section>
-
-    <section id="reset">
-      <h2>Reset Game</h2>
-      <button id="resetGame">Reset Progress</button>
+    <section>
+      <div id="button-box">
+        <button id="earnMoney">Earn Money</button>
+        <button id="buyConveyor" data-cost="100">Buy Conveyor ($100)</button>
+        <button id="upgradeBusiness" data-cost="500">Upgrade Business ($500)</button>
+        <button id="resetGame">Reset Progress</button>
+      </div>
     </section>
   </main>
 
@@ -148,12 +142,8 @@
     // Update UI
     function updateUI() {
       document.getElementById("money").textContent = money;
-      document.getElementById("conveyorInfo").textContent = 
-        `Conveyors Owned: ${conveyorsOwned} | Income per second: $${incomePerSecond}`;
       const nextCost = conveyorBaseCost * Math.pow(2, conveyorsOwned);
       document.getElementById("buyConveyor").textContent = `Buy Conveyor ($${nextCost})`;
-
-      document.getElementById("upgradeInfo").textContent = `Money per click: $${moneyPerClick}`;
       document.getElementById("upgradeBusiness").textContent = `Upgrade Business ($${upgradeCost})`;
     }
 
