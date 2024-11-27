@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Business Tycoon</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
   <style>
     body {
       font-family: 'Poppins', sans-serif;
@@ -16,6 +17,21 @@
       align-items: center;
       min-height: 100vh;
       color: #fff;
+      overflow-x: hidden;
+    }
+
+    .game-header {
+      width: 100%;
+      max-width: 900px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .game-header img {
+      width: 100%;
+      height: auto;
+      max-height: 200px;
+      border-radius: 10px;
     }
 
     main {
@@ -43,6 +59,7 @@
       display: flex;
       flex-direction: column;
       gap: 15px;
+      margin-bottom: 20px;
     }
 
     button {
@@ -98,9 +115,19 @@
       margin-top: 10px;
       font-size: 1.2rem;
     }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+      button {
+        max-width: 90%;
+      }
+    }
   </style>
 </head>
 <body>
+  <div class="game-header">
+    <img src="your-banner-image.png" alt="Business Tycoon">
+  </div>
   <main>
     <h1>Business Tycoon</h1>
     <p id="money">Money: $0</p>
@@ -216,82 +243,99 @@
       setTimeout(() => notification.remove(), 5000); // Remove notification after 5 seconds
     }
 
-    // Game button interactions
-    document.getElementById("earnMoney").addEventListener("click", () => {
-      gameData.money += gameData.moneyPerClick;
-      saveGameData(gameData);
-      updateUI();
-    });
-
-    document.getElementById("buyConveyor").addEventListener("click", () => {
-      if (gameData.money >= gameData.conveyorBaseCost) {
-        gameData.money -= gameData.conveyorBaseCost;
-        gameData.conveyorsOwned++;
-        gameData.incomePerSecond += gameData.conveyorIncome;
-        gameData.conveyorBaseCost = Math.floor(gameData.conveyorBaseCost * 1.5); // Increase cost
-        saveGameData(gameData);
-        updateUI();
-      }
-    });
-
-    document.getElementById("buyFactory").addEventListener("click", () => {
-      if (gameData.money >= gameData.factoryBaseCost) {
-        gameData.money -= gameData.factoryBaseCost;
-        gameData.factoriesOwned++;
-        gameData.incomePerSecond += gameData.factoryIncome;
-        gameData.factoryBaseCost = Math.floor(gameData.factoryBaseCost * 1.5);
-        saveGameData(gameData);
-        updateUI();
-      }
-    });
-
-    document.getElementById("buyOffice").addEventListener("click", () => {
-      if (gameData.money >= gameData.officeBaseCost) {
-        gameData.money -= gameData.officeBaseCost;
-        gameData.officesOwned++;
-        gameData.incomePerSecond += gameData.officeIncome;
-        gameData.officeBaseCost = Math.floor(gameData.officeBaseCost * 1.5);
-        saveGameData(gameData);
-        updateUI();
-      }
-    });
-
-    document.getElementById("buyWarehouse").addEventListener("click", () => {
-      if (gameData.money >= gameData.warehouseBaseCost) {
-        gameData.money -= gameData.warehouseBaseCost;
-        gameData.warehouseOwned++;
-        gameData.incomePerSecond += gameData.warehouseIncome;
-        gameData.warehouseBaseCost = Math.floor(gameData.warehouseBaseCost * 1.5);
-        saveGameData(gameData);
-        updateUI();
-      }
-    });
-
-    document.getElementById("upgradeBusiness").addEventListener("click", () => {
-      if (gameData.money >= gameData.upgradeCost) {
-        gameData.money -= gameData.upgradeCost;
-        gameData.upgradeCost = Math.floor(gameData.upgradeCost * 2); // Double cost
-        gameData.moneyPerClick *= 2; // Double money per click
-        saveGameData(gameData);
-        updateUI();
-      }
-    });
-
-    document.getElementById("resetGame").addEventListener("click", () => {
-      if (confirm("Are you sure you want to reset your progress?")) {
-        gameData.prestigePoints++;
-        gameData = loadGameData(); // Load the saved data again
-        saveGameData(gameData);
-        updateUI();
-      }
-    });
-
-    // Income per second interval
+    // Game loop to simulate passive income
     setInterval(() => {
       gameData.money += gameData.incomePerSecond;
       saveGameData(gameData);
       updateUI();
     }, 1000);
+
+    document.getElementById("earnMoney").onclick = () => {
+      gameData.money += gameData.moneyPerClick;
+      saveGameData(gameData);
+      updateUI();
+      playButtonSound();
+    };
+
+    document.getElementById("buyConveyor").onclick = () => {
+      if (gameData.money >= gameData.conveyorBaseCost) {
+        gameData.money -= gameData.conveyorBaseCost;
+        gameData.conveyorsOwned++;
+        gameData.incomePerSecond += gameData.conveyorIncome;
+        gameData.conveyorBaseCost *= 1.2;
+        saveGameData(gameData);
+        updateUI();
+        playButtonSound();
+      }
+    };
+
+    document.getElementById("buyFactory").onclick = () => {
+      if (gameData.money >= gameData.factoryBaseCost) {
+        gameData.money -= gameData.factoryBaseCost;
+        gameData.factoriesOwned++;
+        gameData.incomePerSecond += gameData.factoryIncome;
+        gameData.factoryBaseCost *= 1.2;
+        saveGameData(gameData);
+        updateUI();
+        playButtonSound();
+      }
+    };
+
+    document.getElementById("buyOffice").onclick = () => {
+      if (gameData.money >= gameData.officeBaseCost) {
+        gameData.money -= gameData.officeBaseCost;
+        gameData.officesOwned++;
+        gameData.incomePerSecond += gameData.officeIncome;
+        gameData.officeBaseCost *= 1.2;
+        saveGameData(gameData);
+        updateUI();
+        playButtonSound();
+      }
+    };
+
+    document.getElementById("buyWarehouse").onclick = () => {
+      if (gameData.money >= gameData.warehouseBaseCost) {
+        gameData.money -= gameData.warehouseBaseCost;
+        gameData.warehouseOwned++;
+        gameData.incomePerSecond += gameData.warehouseIncome;
+        gameData.warehouseBaseCost *= 1.2;
+        saveGameData(gameData);
+        updateUI();
+        playButtonSound();
+      }
+    };
+
+    document.getElementById("upgradeBusiness").onclick = () => {
+      if (gameData.money >= gameData.upgradeCost) {
+        gameData.money -= gameData.upgradeCost;
+        gameData.moneyPerClick *= 2;
+        gameData.upgradeCost *= 1.5;
+        saveGameData(gameData);
+        updateUI();
+        playButtonSound();
+      }
+    };
+
+    document.getElementById("resetGame").onclick = () => {
+      gameData.prestigePoints++;
+      gameData = loadGameData(); // Reset to initial game state
+      gameData.money = 0;
+      gameData.incomePerSecond = 0;
+      gameData.moneyPerClick = 1;
+      gameData.conveyorsOwned = 0;
+      gameData.factoriesOwned = 0;
+      gameData.officesOwned = 0;
+      gameData.warehouseOwned = 0;
+      gameData.achievements = [];
+      saveGameData(gameData);
+      updateUI();
+      playButtonSound();
+    };
+
+    function playButtonSound() {
+      const sound = new Audio('button-click-sound.mp3'); // Add your own sound file here
+      sound.play();
+    }
 
     updateUI(); // Initial UI update
   </script>
