@@ -6,6 +6,8 @@
   <title>Business Tycoon</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    /* Basic styles, same as before */
+    /* Styling the background, buttons, and layout */
     body {
       font-family: 'Poppins', sans-serif;
       margin: 0;
@@ -135,10 +137,12 @@
         <button id="earnMoney" class="tooltip" data-tooltip="Click to earn money">Earn Money</button>
         <button id="buyConveyor" data-cost="100">Buy Conveyor ($100)</button>
         <button id="buyFactory" data-cost="1000">Buy Factory ($1000)</button>
+        <button id="buyOffice" data-cost="2000">Buy Office ($2000)</button>
         <button id="upgradeBusiness" data-cost="500">Upgrade Business ($500)</button>
         <button id="resetGame">Reset Progress</button>
       </div>
     </section>
+
     <section id="achievements">
       <h2>Achievements</h2>
       <div id="achievement-list"></div>
@@ -160,7 +164,12 @@
     let factoryBaseCost = 1000;
     let factoryIncome = 10;
 
+    let officesOwned = 0;
+    let officeBaseCost = 2000;
+    let officeIncome = 20;
+
     let upgradeCost = 500;
+    let prestigePoints = 0;
 
     const achievements = [
       { name: "First Click!", condition: () => money >= 1 },
@@ -168,9 +177,8 @@
       { name: "First Conveyor", condition: () => conveyorsOwned >= 1 },
       { name: "First Factory", condition: () => factoriesOwned >= 1 },
       { name: "Millionaire", condition: () => money >= 1000000 },
-      { name: "10 Conveyors!", condition: () => conveyorsOwned >= 10 },
-      { name: "5 Factories!", condition: () => factoriesOwned >= 5 },
-      { name: "Rich Tycoon", condition: () => money >= 100000000 }
+      { name: "First Office", condition: () => officesOwned >= 1 },
+      { name: "Prestige Master", condition: () => prestigePoints >= 1 }
     ];
 
     function formatNumber(num) {
@@ -183,12 +191,89 @@
     function updateUI() {
       document.getElementById("money").textContent = formatNumber(money);
       document.getElementById("income").textContent = formatNumber(incomePerSecond);
+
+      const achievementList = document.getElementById("achievement-list");
+      achievementList.innerHTML = "";
+      achievements.forEach((achievement) => {
+        const unlocked = achievement.condition();
+        const div = document.createElement("div");
+        div.textContent = achievement.name;
+        div.className = unlocked ? "achievement unlocked" : "achievement";
+        achievementList.appendChild(div);
+      });
     }
 
-    // Functions to handle gameplay...
-    // [FULL CODE OMITTED HERE DUE TO LENGTH]
-    // Incorporates all previous features with the changes.
+    // Earn money per click
+    document.getElementById("earnMoney").addEventListener("click", () => {
+      money += moneyPerClick;
+      updateUI();
+    });
 
+    // Buy conveyors
+    document.getElementById("buyConveyor").addEventListener("click", () => {
+      const cost = conveyorBaseCost * Math.pow(2, conveyorsOwned);
+      if (money >= cost) {
+        money -= cost;
+        conveyorsOwned++;
+        incomePerSecond += conveyorIncome;
+        updateUI();
+      }
+    });
+
+    // Buy factories
+    document.getElementById("buyFactory").addEventListener("click", () => {
+      const cost = factoryBaseCost * Math.pow(2, factoriesOwned);
+      if (money >= cost) {
+        money -= cost;
+        factoriesOwned++;
+        incomePerSecond += factoryIncome;
+        updateUI();
+      }
+    });
+
+    // Buy offices
+    document.getElementById("buyOffice").addEventListener("click", () => {
+      const cost = officeBaseCost * Math.pow(2, officesOwned);
+      if (money >= cost) {
+        money -= cost;
+        officesOwned++;
+        incomePerSecond += officeIncome;
+        updateUI();
+      }
+    });
+
+    // Upgrade business
+    document.getElementById("upgradeBusiness").addEventListener("click", () => {
+      if (money >= upgradeCost) {
+        money -= upgradeCost;
+        upgradeCost *= 2;
+        moneyPerClick *= 2;
+        updateUI();
+      }
+    });
+
+    // Reset game
+    document.getElementById("resetGame").addEventListener("click", () => {
+      if (confirm("Are you sure you want to reset your progress?")) {
+        prestigePoints++;
+        money = 0;
+        incomePerSecond = 0;
+        moneyPerClick = 1;
+        conveyorsOwned = 0;
+        factoriesOwned = 0;
+        officesOwned = 0;
+        upgradeCost = 500;
+        updateUI();
+      }
+    });
+
+    // Passive income
+    setInterval(() => {
+      money += incomePerSecond;
+      updateUI();
+    }, 1000);
+
+    // Initialize UI
     updateUI();
   </script>
 </body>
