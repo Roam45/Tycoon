@@ -10,7 +10,7 @@
       font-family: 'Poppins', sans-serif;
       margin: 0;
       padding: 0;
-      background: linear-gradient(135deg, #1e90ff, #00bfff);
+      background: linear-gradient(135deg, #4CAF50, #81C784);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -46,7 +46,7 @@
     }
 
     button {
-      background: #0078d4;
+      background: #388E3C;
       color: white;
       font-size: 1.2rem;
       padding: 15px 30px;
@@ -60,7 +60,7 @@
     }
 
     button:hover {
-      background: #005fa3;
+      background: #2E7D32;
     }
 
     button:disabled {
@@ -125,34 +125,41 @@
   </main>
 
   <script>
-    let money = 0;
-    let incomePerSecond = 0;
-    let moneyPerClick = 1;
-    let conveyorsOwned = 0;
-    let conveyorBaseCost = 100;
-    let conveyorIncome = 1;
-    let factoriesOwned = 0;
-    let factoryBaseCost = 1000;
-    let factoryIncome = 10;
-    let officesOwned = 0;
-    let officeBaseCost = 2000;
-    let officeIncome = 20;
-    let warehouseOwned = 0;
-    let warehouseBaseCost = 5000;
-    let warehouseIncome = 50;
-    let prestigePoints = 0;
-    let upgradeCost = 500;
+    // Load saved game data from localStorage or initialize to default
+    function loadGameData() {
+      let savedData = JSON.parse(localStorage.getItem('gameData'));
+      if (savedData) {
+        return savedData;
+      } else {
+        return {
+          money: 0,
+          incomePerSecond: 0,
+          moneyPerClick: 1,
+          conveyorsOwned: 0,
+          conveyorBaseCost: 100,
+          conveyorIncome: 1,
+          factoriesOwned: 0,
+          factoryBaseCost: 1000,
+          factoryIncome: 10,
+          officesOwned: 0,
+          officeBaseCost: 2000,
+          officeIncome: 20,
+          warehouseOwned: 0,
+          warehouseBaseCost: 5000,
+          warehouseIncome: 50,
+          prestigePoints: 0,
+          upgradeCost: 500,
+          achievements: [] // Store unlocked achievements here
+        };
+      }
+    }
 
-    const achievements = [
-      { name: "First Click!", condition: () => money >= 1 },
-      { name: "100 Bucks", condition: () => money >= 100 },
-      { name: "First Conveyor", condition: () => conveyorsOwned >= 1 },
-      { name: "First Factory", condition: () => factoriesOwned >= 1 },
-      { name: "First Office", condition: () => officesOwned >= 1 },
-      { name: "Millionaire", condition: () => money >= 1000000 },
-      { name: "Prestige Master", condition: () => prestigePoints >= 1 }
-    ];
+    // Save game data to localStorage
+    function saveGameData(data) {
+      localStorage.setItem('gameData', JSON.stringify(data));
+    }
 
+    // Format number for easier readability
     function formatNumber(num) {
       if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
       if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
@@ -160,22 +167,40 @@
       return num;
     }
 
-    function updateUI() {
-      document.getElementById("money").textContent = "Money: $" + formatNumber(money);
-      document.getElementById("income").textContent = formatNumber(incomePerSecond);
-      document.getElementById("prestige").textContent = prestigePoints;
-      
-      // Enable/Disable buttons based on money
-      document.getElementById("buyConveyor").disabled = money < conveyorBaseCost;
-      document.getElementById("buyFactory").disabled = money < factoryBaseCost;
-      document.getElementById("buyOffice").disabled = money < officeBaseCost;
-      document.getElementById("buyWarehouse").disabled = money < warehouseBaseCost;
-      document.getElementById("upgradeBusiness").disabled = money < upgradeCost;
+    let gameData = loadGameData(); // Load saved data on game start
 
+    function updateUI() {
+      document.getElementById("money").textContent = "Money: $" + formatNumber(gameData.money);
+      document.getElementById("income").textContent = formatNumber(gameData.incomePerSecond);
+      document.getElementById("prestige").textContent = gameData.prestigePoints;
+
+      // Enable/Disable buttons based on money
+      document.getElementById("buyConveyor").disabled = gameData.money < gameData.conveyorBaseCost;
+      document.getElementById("buyFactory").disabled = gameData.money < gameData.factoryBaseCost;
+      document.getElementById("buyOffice").disabled = gameData.money < gameData.officeBaseCost;
+      document.getElementById("buyWarehouse").disabled = gameData.money < gameData.warehouseBaseCost;
+      document.getElementById("upgradeBusiness").disabled = gameData.money < gameData.upgradeCost;
+
+      // Update achievements
       const achievementList = document.getElementById("achievement-list");
       achievementList.innerHTML = "";
+      const achievements = [
+        { name: "First Click!", condition: () => gameData.money >= 1 },
+        { name: "100 Bucks", condition: () => gameData.money >= 100 },
+        { name: "First Conveyor", condition: () => gameData.conveyorsOwned >= 1 },
+        { name: "First Factory", condition: () => gameData.factoriesOwned >= 1 },
+        { name: "First Office", condition: () => gameData.officesOwned >= 1 },
+        { name: "Millionaire", condition: () => gameData.money >= 1000000 },
+        { name: "Prestige Master", condition: () => gameData.prestigePoints >= 1 }
+      ];
+
       achievements.forEach((achievement) => {
         const unlocked = achievement.condition();
+        if (unlocked && !gameData.achievements.includes(achievement.name)) {
+          gameData.achievements.push(achievement.name); // Save unlocked achievements
+          saveGameData(gameData);
+          showAchievementNotification(achievement.name);
+        }
         const div = document.createElement("div");
         div.textContent = achievement.name;
         div.className = unlocked ? "achievement unlocked" : "achievement";
@@ -183,80 +208,92 @@
       });
     }
 
+    function showAchievementNotification(achievement) {
+      const notification = document.createElement("div");
+      notification.className = "notification";
+      notification.textContent = `Achievement Unlocked: ${achievement}`;
+      document.getElementById("notifications").appendChild(notification);
+      setTimeout(() => notification.remove(), 5000); // Remove notification after 5 seconds
+    }
+
+    // Game button interactions
     document.getElementById("earnMoney").addEventListener("click", () => {
-      money += moneyPerClick;
+      gameData.money += gameData.moneyPerClick;
+      saveGameData(gameData);
       updateUI();
     });
 
     document.getElementById("buyConveyor").addEventListener("click", () => {
-      if (money >= conveyorBaseCost) {
-        money -= conveyorBaseCost;
-        conveyorsOwned++;
-        incomePerSecond += conveyorIncome;
-        conveyorBaseCost = Math.floor(conveyorBaseCost * 1.5); // Increase cost for next purchase
+      if (gameData.money >= gameData.conveyorBaseCost) {
+        gameData.money -= gameData.conveyorBaseCost;
+        gameData.conveyorsOwned++;
+        gameData.incomePerSecond += gameData.conveyorIncome;
+        gameData.conveyorBaseCost = Math.floor(gameData.conveyorBaseCost * 1.5); // Increase cost
+        saveGameData(gameData);
         updateUI();
       }
     });
 
     document.getElementById("buyFactory").addEventListener("click", () => {
-      if (money >= factoryBaseCost) {
-        money -= factoryBaseCost;
-        factoriesOwned++;
-        incomePerSecond += factoryIncome;
-        factoryBaseCost = Math.floor(factoryBaseCost * 1.5);
+      if (gameData.money >= gameData.factoryBaseCost) {
+        gameData.money -= gameData.factoryBaseCost;
+        gameData.factoriesOwned++;
+        gameData.incomePerSecond += gameData.factoryIncome;
+        gameData.factoryBaseCost = Math.floor(gameData.factoryBaseCost * 1.5);
+        saveGameData(gameData);
         updateUI();
       }
     });
 
     document.getElementById("buyOffice").addEventListener("click", () => {
-      if (money >= officeBaseCost) {
-        money -= officeBaseCost;
-        officesOwned++;
-        incomePerSecond += officeIncome;
-        officeBaseCost = Math.floor(officeBaseCost * 1.5);
+      if (gameData.money >= gameData.officeBaseCost) {
+        gameData.money -= gameData.officeBaseCost;
+        gameData.officesOwned++;
+        gameData.incomePerSecond += gameData.officeIncome;
+        gameData.officeBaseCost = Math.floor(gameData.officeBaseCost * 1.5);
+        saveGameData(gameData);
         updateUI();
       }
     });
 
     document.getElementById("buyWarehouse").addEventListener("click", () => {
-      if (money >= warehouseBaseCost) {
-        money -= warehouseBaseCost;
-        warehouseOwned++;
-        incomePerSecond += warehouseIncome;
-        warehouseBaseCost = Math.floor(warehouseBaseCost * 1.5);
+      if (gameData.money >= gameData.warehouseBaseCost) {
+        gameData.money -= gameData.warehouseBaseCost;
+        gameData.warehouseOwned++;
+        gameData.incomePerSecond += gameData.warehouseIncome;
+        gameData.warehouseBaseCost = Math.floor(gameData.warehouseBaseCost * 1.5);
+        saveGameData(gameData);
         updateUI();
       }
     });
 
     document.getElementById("upgradeBusiness").addEventListener("click", () => {
-      if (money >= upgradeCost) {
-        money -= upgradeCost;
-        upgradeCost = Math.floor(upgradeCost * 2); // Double upgrade cost each time
-        moneyPerClick *= 2; // Double money per click
+      if (gameData.money >= gameData.upgradeCost) {
+        gameData.money -= gameData.upgradeCost;
+        gameData.upgradeCost = Math.floor(gameData.upgradeCost * 2); // Double cost
+        gameData.moneyPerClick *= 2; // Double money per click
+        saveGameData(gameData);
         updateUI();
       }
     });
 
     document.getElementById("resetGame").addEventListener("click", () => {
       if (confirm("Are you sure you want to reset your progress?")) {
-        prestigePoints++;
-        money = 0;
-        incomePerSecond = 0;
-        conveyorsOwned = 0;
-        factoriesOwned = 0;
-        officesOwned = 0;
-        warehouseOwned = 0;
+        gameData.prestigePoints++;
+        gameData = loadGameData(); // Load the saved data again
+        saveGameData(gameData);
         updateUI();
       }
     });
 
+    // Income per second interval
     setInterval(() => {
-      money += incomePerSecond;
+      gameData.money += gameData.incomePerSecond;
+      saveGameData(gameData);
       updateUI();
     }, 1000);
 
-    // Initialize game
-    updateUI();
+    updateUI(); // Initial UI update
   </script>
 </body>
 </html>
