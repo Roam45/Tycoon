@@ -3,189 +3,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ultimate Tycoon</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <title>Business Tycoon Debugged</title>
   <style>
-    /* General Styling */
     body {
-      font-family: 'Poppins', sans-serif;
+      font-family: Arial, sans-serif;
+      background-color: #4CAF50;
+      color: white;
+      text-align: center;
       margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #4CAF50, #81C784);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      color: #fff;
-    }
-
-    header {
-      width: 100%;
-      max-width: 1200px;
       padding: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
 
-    header h1 {
-      font-size: 2.5rem;
-      margin: 0;
-    }
-
-    main {
-      display: flex;
-      justify-content: space-between;
-      gap: 40px;
-      width: 100%;
-      max-width: 1200px;
+    .game-box {
+      margin: 20px auto;
       padding: 20px;
-      background-color: rgba(255, 255, 255, 0.1);
-      border-radius: 15px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    }
-
-    section {
-      flex: 1;
-    }
-
-    #money {
-      font-size: 2rem;
-      margin-bottom: 10px;
-    }
-
-    .button-box {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      width: 100%;
-      max-width: 300px;
+      max-width: 400px;
+      background-color: #81C784;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
 
     button {
-      background: #388E3C;
-      color: white;
-      font-size: 1.2rem;
-      padding: 15px 30px;
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
       border: none;
-      border-radius: 8px;
+      border-radius: 5px;
+      background-color: #388E3C;
+      color: white;
       cursor: pointer;
-      transition: background 0.3s ease;
-    }
-
-    button:hover {
-      background: #2E7D32;
     }
 
     button:disabled {
-      background: #aaa;
+      background-color: #555;
       cursor: not-allowed;
-    }
-
-    #rebirthGame {
-      background: #D4AF37;
-    }
-
-    #killGame {
-      background: #E53935;
-    }
-
-    #achievements {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 10px;
-      border-radius: 8px;
-    }
-
-    /* Random Event Styling */
-    #eventBox {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #FFD700;
-      color: #333;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-      display: none;
     }
   </style>
 </head>
 <body>
-  <header>
+  <div class="game-box">
     <h1>Business Tycoon</h1>
-    <button id="changeTheme">Change Theme</button>
-  </header>
-  <main>
-    <section>
-      <p id="money">Money: $0</p>
-      <p>Income/sec: $<span id="income">0</span></p>
-      <p>Prestige Points: <span id="prestige">0</span></p>
+    <p id="money-display">Money: $0</p>
+    <p id="income-display">Income per second: $0</p>
 
-      <div class="button-box">
-        <button id="earnMoney">Earn Money</button>
-        <button id="buyConveyor">Buy Conveyor ($100)</button>
-        <button id="buyFactory">Buy Factory ($1k)</button>
-        <button id="buyLuxury">Buy Private Jet ($100k)</button>
-        <button id="upgradeBusiness">Upgrade Business ($500)</button>
-        <button id="rebirthGame">Rebirth ($1M)</button>
-        <button id="killGame">Kill Game</button>
-      </div>
-    </section>
-
-    <section id="achievements">
-      <h2>Achievements</h2>
-      <div id="achievementsList"></div>
-    </section>
-  </main>
-
-  <div id="eventBox"></div>
+    <button id="earn-money">Earn Money</button>
+    <button id="buy-conveyor">Buy Conveyor ($100)</button>
+    <button id="rebirth" disabled>Rebirth ($1M)</button>
+  </div>
 
   <script>
-    let gameData = loadGameData();
+    // Initialize game data
+    let gameData = {
+      money: 0,
+      incomePerSecond: 0,
+      conveyors: 0,
+      conveyorCost: 100,
+      rebirthCost: 1e6
+    };
 
-    function saveGameData() {
-      localStorage.setItem("gameData", JSON.stringify(gameData));
+    // Load saved game data
+    function loadGame() {
+      const savedData = localStorage.getItem('tycoonGameData');
+      if (savedData) {
+        gameData = JSON.parse(savedData);
+      }
     }
 
-    function loadGameData() {
-      const savedData = JSON.parse(localStorage.getItem("gameData"));
-      return savedData || {
-        money: 0,
-        incomePerSecond: 0,
-        moneyPerClick: 1,
-        conveyorsOwned: 0,
-        factoryBaseCost: 1000,
-        luxuryOwned: 0,
-        achievements: [],
-        prestigePoints: 0,
-      };
+    // Save game data to local storage
+    function saveGame() {
+      localStorage.setItem('tycoonGameData', JSON.stringify(gameData));
     }
 
-    // Format numbers like 1k, 1M
+    // Update the UI
+    function updateUI() {
+      document.getElementById('money-display').innerText = `Money: $${formatNumber(gameData.money)}`;
+      document.getElementById('income-display').innerText = `Income per second: $${formatNumber(gameData.incomePerSecond)}`;
+      document.getElementById('buy-conveyor').innerText = `Buy Conveyor ($${formatNumber(gameData.conveyorCost)})`;
+
+      // Enable or disable rebirth button
+      document.getElementById('rebirth').disabled = gameData.money < gameData.rebirthCost;
+    }
+
+    // Format numbers to display as $1k, $1M, etc.
     function formatNumber(num) {
-      if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
-      if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
-      if (num >= 1e3) return (num / 1e3).toFixed(1) + "K";
-      return num.toString();
+      if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+      if (num >= 1e3) return (num / 1e3).toFixed(1) + 'k';
+      return num.toFixed(0);
     }
 
-    // Event Box
-    function triggerRandomEvent() {
-      const eventBox = document.getElementById("eventBox");
-      eventBox.style.display = "block";
-      eventBox.innerHTML = "Market Boom! Income x2 for 30s";
-    }
-
-    setInterval(() => {
-      gameData.money += gameData.incomePerSecond;
-      saveGameData();
+    // Earn money manually
+    document.getElementById('earn-money').addEventListener('click', () => {
+      gameData.money += 1;
       updateUI();
-    }, 1000);
-    
-    function rebirth() {
+      saveGame();
+    });
+
+    // Buy a conveyor
+    document.getElementById('buy-conveyor').addEventListener('click', () => {
+      if (gameData.money >= gameData.conveyorCost) {
+        gameData.money -= gameData.conveyorCost;
+        gameData.conveyors += 1;
+        gameData.incomePerSecond += 10; // Each conveyor adds $10/sec
+        gameData.conveyorCost = Math.floor(gameData.conveyorCost * 1.15); // Cost increases by 15%
+        updateUI();
+        saveGame();
+      }
+    });
+
+    // Rebirth the game
+    document.getElementById('rebirth').addEventListener('click', () => {
       if (gameData.money >= gameData.rebirthCost) {
         gameData.money = 0;
-        alert("All new"); saveGameData()}
+        gameData.incomePerSecond = 0;
+        gameData.conveyors = 0;
+        gameData.conveyorCost = 100;
+        alert('You have rebirthed! Enjoy permanent benefits.');
+        updateUI();
+        saveGame();
+      }
+    });
+
+    // Generate income every second
+    setInterval(() => {
+      gameData.money += gameData.incomePerSecond;
+      updateUI();
+      saveGame();
+    }, 1000);
+
+    // Load game and update UI on page load
+    loadGame();
     updateUI();
   </script>
 </body>
