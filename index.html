@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Business Tycoon</title>
+  <title>Ultimate Tycoon</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     /* General Styling */
@@ -13,10 +13,24 @@
       padding: 0;
       background: linear-gradient(135deg, #4CAF50, #81C784);
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
       min-height: 100vh;
       color: #fff;
+    }
+
+    header {
+      width: 100%;
+      max-width: 1200px;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin: 0;
     }
 
     main {
@@ -35,11 +49,6 @@
       flex: 1;
     }
 
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 20px;
-    }
-
     #money {
       font-size: 2rem;
       margin-bottom: 10px;
@@ -51,7 +60,6 @@
       gap: 15px;
       width: 100%;
       max-width: 300px;
-      margin: 0 auto;
     }
 
     button {
@@ -74,38 +82,43 @@
       cursor: not-allowed;
     }
 
+    #rebirthGame {
+      background: #D4AF37;
+    }
+
     #killGame {
       background: #E53935;
-      margin-top: 30px;
     }
 
-    #killGame:hover {
-      background: #D32F2F;
-    }
-
-    #achievementBox {
-      width: 300px;
-      margin-left: 40px;
-    }
-
-    .achievement {
-      margin: 5px 0;
-      background: #388E3C;
+    #achievements {
+      background: rgba(255, 255, 255, 0.1);
       padding: 10px;
-      border-radius: 5px;
+      border-radius: 8px;
     }
 
-    .achievement.completed {
-      background: #81C784;
+    /* Random Event Styling */
+    #eventBox {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #FFD700;
+      color: #333;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      display: none;
     }
   </style>
 </head>
 <body>
+  <header>
+    <h1>Business Tycoon</h1>
+    <button id="changeTheme">Change Theme</button>
+  </header>
   <main>
     <section>
-      <h1>Business Tycoon</h1>
       <p id="money">Money: $0</p>
-      <p>Income per Second: $<span id="income">0</span></p>
+      <p>Income/sec: $<span id="income">0</span></p>
       <p>Prestige Points: <span id="prestige">0</span></p>
 
       <div class="button-box">
@@ -115,42 +128,40 @@
         <button id="buyLuxury">Buy Private Jet ($100k)</button>
         <button id="upgradeBusiness">Upgrade Business ($500)</button>
         <button id="rebirthGame">Rebirth ($1M)</button>
-        <button id="killGame">Kill (Reset Game)</button>
+        <button id="killGame">Kill Game</button>
       </div>
     </section>
 
-    <section id="achievementBox">
+    <section id="achievements">
       <h2>Achievements</h2>
-      <div id="achievements"></div>
+      <div id="achievementsList"></div>
     </section>
   </main>
 
+  <div id="eventBox"></div>
+
   <script>
-    /* Helper Functions */
-    function loadGameData() {
-      const savedData = JSON.parse(localStorage.getItem("gameData"));
-      if (savedData) return savedData;
-      return {
-        money: 0,
-        incomePerSecond: 0,
-        moneyPerClick: 1,
-        conveyorsOwned: 0,
-        conveyorBaseCost: 100,
-        factoriesOwned: 0,
-        factoryBaseCost: 1000,
-        luxuryOwned: 0,
-        luxuryBaseCost: 100000,
-        prestigePoints: 0,
-        upgradeCost: 500,
-        achievements: [],
-        rebirthCost: 1000000,
-      };
-    }
+    let gameData = loadGameData();
 
     function saveGameData() {
       localStorage.setItem("gameData", JSON.stringify(gameData));
     }
 
+    function loadGameData() {
+      const savedData = JSON.parse(localStorage.getItem("gameData"));
+      return savedData || {
+        money: 0,
+        incomePerSecond: 0,
+        moneyPerClick: 1,
+        conveyorsOwned: 0,
+        factoryBaseCost: 1000,
+        luxuryOwned: 0,
+        achievements: [],
+        prestigePoints: 0,
+      };
+    }
+
+    // Format numbers like 1k, 1M
     function formatNumber(num) {
       if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
       if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
@@ -158,105 +169,23 @@
       return num.toString();
     }
 
-    function updateUI() {
-      document.getElementById("money").textContent = "Money: $" + formatNumber(gameData.money);
-      document.getElementById("income").textContent = formatNumber(gameData.incomePerSecond);
-      document.getElementById("prestige").textContent = gameData.prestigePoints;
-
-      document.getElementById("buyConveyor").textContent = `Buy Conveyor ($${formatNumber(gameData.conveyorBaseCost)})`;
-      document.getElementById("buyFactory").textContent = `Buy Factory ($${formatNumber(gameData.factoryBaseCost)})`;
-      document.getElementById("buyLuxury").textContent = `Buy Private Jet ($${formatNumber(gameData.luxuryBaseCost)})`;
-      document.getElementById("upgradeBusiness").textContent = `Upgrade Business ($${formatNumber(gameData.upgradeCost)})`;
-
-      updateAchievements();
+    // Event Box
+    function triggerRandomEvent() {
+      const eventBox = document.getElementById("eventBox");
+      eventBox.style.display = "block";
+      eventBox.innerHTML = "Market Boom! Income x2 for 30s";
     }
-
-    function earnMoney() {
-      gameData.money += gameData.moneyPerClick;
-      saveGameData();
-      updateUI();
-      checkAchievements();
-    }
-
-    function buyItem(item) {
-      const cost = gameData[`${item}BaseCost`];
-      if (gameData.money >= cost) {
-        gameData.money -= cost;
-        gameData[`${item}BaseCost`] = Math.ceil(cost * 1.15);
-        gameData[`${item}sOwned`]++;
-
-        gameData.incomePerSecond += {
-          conveyor: 1,
-          factory: 10,
-          luxury: 500,
-        }[item];
-        saveGameData();
-        updateUI();
-        checkAchievements();
-      } else {
-        alert("Not enough money!");
-      }
-    }
-
-    function checkAchievements() {
-      if (gameData.money >= 100000 && !gameData.achievements.some(a => a.name === "Millionaire")) {
-        gameData.achievements.push({ name: "Millionaire", completed: true });
-      }
-      if (gameData.conveyorsOwned >= 10 && !gameData.achievements.some(a => a.name === "Conveyor Master")) {
-        gameData.achievements.push({ name: "Conveyor Master", completed: true });
-      }
-      saveGameData();
-      updateUI();
-    }
-
-    function rebirth() {
-      if (gameData.money >= gameData.rebirthCost) {
-        gameData.prestigePoints++;
-        gameData.money = 0;
-        gameData.incomePerSecond = 0;
-        gameData.conveyorsOwned = 0;
-        gameData.factoryBaseCost = 1000;
-        gameData.moneyPerClick = 1;
-        gameData.achievements = [];
-        gameData.rebirthCost *= 10;
-        saveGameData();
-        updateUI();
-      }
-    }
-
-    function resetGame() {
-      if (confirm("Are you sure you want to reset the game? All progress will be lost!")) {
-        localStorage.removeItem("gameData");
-        gameData = loadGameData();
-        updateUI();
-      }
-    }
-
-    let gameData = loadGameData();
-
-    document.getElementById("earnMoney").addEventListener("click", earnMoney);
-    document.getElementById("buyConveyor").addEventListener("click", () => buyItem('conveyor'));
-    document.getElementById("buyFactory").addEventListener("click", () => buyItem('factory'));
-    document.getElementById("buyLuxury").addEventListener("click", () => buyItem('luxury'));
-    document.getElementById("upgradeBusiness").addEventListener("click", () => {
-      if (gameData.money >= gameData.upgradeCost) {
-        gameData.moneyPerClick *= 2;
-        gameData.upgradeCost *= 2;
-        saveGameData();
-        updateUI();
-      } else {
-        alert("Not enough money!");
-      }
-    });
-    document.getElementById("rebirthGame").addEventListener("click", rebirth);
-    document.getElementById("killGame").addEventListener("click", resetGame);
 
     setInterval(() => {
       gameData.money += gameData.incomePerSecond;
       saveGameData();
       updateUI();
     }, 1000);
-
+    
+    function rebirth() {
+      if (gameData.money >= gameData.rebirthCost) {
+        gameData.money = 0;
+        alert("All new"); saveGameData()}
     updateUI();
   </script>
 </body>
