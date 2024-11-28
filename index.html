@@ -71,6 +71,7 @@
 
     button:disabled {
       background: #aaa;
+      cursor: not-allowed;
     }
 
     #achievements {
@@ -124,13 +125,108 @@
   </main>
 
   <script>
-    // Load saved game data from localStorage or initialize to default
+    // Load game data from localStorage or initialize
     function loadGameData() {
-      let savedData = JSON.parse(localStorage.getItem('gameData'));
-      if (savedData) {
-        return savedData;
+      const savedData = JSON.parse(localStorage.getItem("gameData"));
+      if (savedData) return savedData;
+      return {
+        money: 0,
+        incomePerSecond: 0,
+        moneyPerClick: 1,
+        conveyorsOwned: 0,
+        conveyorBaseCost: 100,
+        factoriesOwned: 0,
+        factoryBaseCost: 1000,
+        officesOwned: 0,
+        officeBaseCost: 2000,
+        warehousesOwned: 0,
+        warehouseBaseCost: 5000,
+        prestigePoints: 0,
+        upgradeCost: 500,
+        achievements: []
+      };
+    }
+
+    // Save game data to localStorage
+    function saveGameData() {
+      localStorage.setItem("gameData", JSON.stringify(gameData));
+    }
+
+    // Format numbers for display
+    function formatNumber(num) {
+      if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
+      if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
+      if (num >= 1e3) return (num / 1e3).toFixed(1) + "K";
+      return num.toString();
+    }
+
+    const gameData = loadGameData();
+
+    function updateUI() {
+      document.getElementById("money").textContent = "Money: $" + formatNumber(gameData.money);
+      document.getElementById("income").textContent = formatNumber(gameData.incomePerSecond);
+      document.getElementById("prestige").textContent = gameData.prestigePoints;
+
+      document.getElementById("buyConveyor").textContent =
+        `Buy Conveyor ($${formatNumber(gameData.conveyorBaseCost)})`;
+      document.getElementById("buyFactory").textContent =
+        `Buy Factory ($${formatNumber(gameData.factoryBaseCost)})`;
+      document.getElementById("buyOffice").textContent =
+        `Buy Office ($${formatNumber(gameData.officeBaseCost)})`;
+      document.getElementById("buyWarehouse").textContent =
+        `Buy Warehouse ($${formatNumber(gameData.warehouseBaseCost)})`;
+      document.getElementById("upgradeBusiness").textContent =
+        `Upgrade Business ($${formatNumber(gameData.upgradeCost)})`;
+    }
+
+    // Buying logic
+    function buyItem(item) {
+      const cost = gameData[`${item}BaseCost`];
+      if (gameData.money >= cost) {
+        gameData.money -= cost;
+        gameData[`${item}BaseCost`] = Math.ceil(cost * 1.15);
+        gameData[`${item}sOwned`]++;
+        gameData.incomePerSecond += {
+          conveyor: 1,
+          factory: 10,
+          office: 25,
+          warehouse: 50
+        }[item];
+        saveGameData();
+        updateUI();
       } else {
-        return {
+        alert("Not enough money!");
+      }
+    }
+
+    // Add event listeners
+    document.getElementById("earnMoney").addEventListener("click", () => {
+      gameData.money += gameData.moneyPerClick;
+      saveGameData();
+      updateUI();
+    });
+
+    document.getElementById("buyConveyor").addEventListener("click", () => buyItem("conveyor"));
+    document.getElementById("buyFactory").addEventListener("click", () => buyItem("factory"));
+    document.getElementById("buyOffice").addEventListener("click", () => buyItem("office"));
+    document.getElementById("buyWarehouse").addEventListener("click", () => buyItem("warehouse"));
+
+    document.getElementById("upgradeBusiness").addEventListener("click", () => {
+      if (gameData.money >= gameData.upgradeCost) {
+        gameData.money -= gameData.upgradeCost;
+        gameData.moneyPerClick *= 2;
+        gameData.upgradeCost = Math.ceil(gameData.upgradeCost * 1.5);
+        saveGameData();
+        updateUI();
+      } else {
+        alert("Not enough money!");
+      }
+    });
+
+    document.getElementById("rebirthGame").addEventListener("click", () => {
+      if (confirm("Rebirth will reset progress but grant Prestige Points. Continue?")) {
+        gameData.prestigePoints++;
+        Object.assign(gameData, {
           money: 0,
           incomePerSecond: 0,
           moneyPerClick: 1,
@@ -140,77 +236,18 @@
           factoryBaseCost: 1000,
           officesOwned: 0,
           officeBaseCost: 2000,
-          warehouseOwned: 0,
+          warehousesOwned: 0,
           warehouseBaseCost: 5000,
-          prestigePoints: 0,
-          upgradeCost: 500,
-          achievements: []
-        };
-      }
-    }
-
-    // Save game data to localStorage
-    function saveGameData(data) {
-      localStorage.setItem('gameData', JSON.stringify(data));
-    }
-
-    // Format numbers for display
-    function formatNumber(num) {
-      if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
-      if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
-      if (num >= 1e3) return (num / 1e3).toFixed(1) + "K";
-      return num;
-    }
-
-    let gameData = loadGameData();
-
-    function updateUI() {
-      document.getElementById("money").textContent = "Money: $" + formatNumber(gameData.money);
-      document.getElementById("income").textContent = formatNumber(gameData.incomePerSecond);
-      document.getElementById("prestige").textContent = gameData.prestigePoints;
-
-      const achievementList = document.getElementById("achievement-list");
-      achievementList.innerHTML = "";
-
-      const achievements = [
-        { name: "First Click!", condition: () => gameData.money >= 1 },
-        { name: "100 Bucks", condition: () => gameData.money >= 100 },
-        { name: "Millionaire", condition: () => gameData.money >= 1000000 }
-      ];
-
-      achievements.forEach(achievement => {
-        const unlocked = achievement.condition();
-        if (unlocked && !gameData.achievements.includes(achievement.name)) {
-          gameData.achievements.push(achievement.name);
-          saveGameData(gameData);
-        }
-        const div = document.createElement("div");
-        div.textContent = achievement.name;
-        div.className = "achievement" + (unlocked ? " unlocked" : "");
-        achievementList.appendChild(div);
-      });
-    }
-
-    document.getElementById("earnMoney").addEventListener("click", () => {
-      gameData.money += gameData.moneyPerClick;
-      saveGameData(gameData);
-      updateUI();
-    });
-
-    document.getElementById("rebirthGame").addEventListener("click", () => {
-      if (confirm("Rebirth will reset progress but grant Prestige Points. Continue?")) {
-        gameData = {
-          ...loadGameData(),
-          prestigePoints: gameData.prestigePoints + 1
-        };
-        saveGameData(gameData);
+          upgradeCost: 500
+        });
+        saveGameData();
         updateUI();
       }
     });
 
     setInterval(() => {
       gameData.money += gameData.incomePerSecond;
-      saveGameData(gameData);
+      saveGameData();
       updateUI();
     }, 1000);
 
