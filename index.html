@@ -98,7 +98,7 @@
     // Initialize game data with valid numbers
     let gameData = {
       money: 0,
-      incomePerSecond: 0,
+      incomePerSecond: 0,  // Ensure this is a number, default to 0
       conveyors: 0,
       conveyorCost: 100,
       conveyorUpgradeCost: 500,
@@ -156,7 +156,7 @@
       if (gameData.money >= gameData.conveyorCost) {
         gameData.money -= gameData.conveyorCost;
         gameData.conveyors += 1;
-        gameData.incomePerSecond += 10 * gameData.rebirthBonus;  // Ensure no NaN here
+        gameData.incomePerSecond += 10 * gameData.rebirthBonus;  // Ensure incomePerSecond is updated correctly
         gameData.conveyorCost = Math.floor(gameData.conveyorCost * 1.15);  // Prevent NaN in cost
         updateUI();
         saveGame();
@@ -200,18 +200,8 @@
     document.getElementById('invest-stock').addEventListener('click', () => {
       if (gameData.money >= gameData.stockInvestmentCost) {
         gameData.money -= gameData.stockInvestmentCost;
-        gameData.incomePerSecond += 500 * gameData.rebirthBonus;
+        gameData.incomePerSecond += 200 * gameData.rebirthBonus;
         gameData.stockInvestmentCost = Math.floor(gameData.stockInvestmentCost * 1.4);
-        updateUI();
-        saveGame();
-      }
-    });
-
-    // Pay taxes
-    document.getElementById('pay-tax').addEventListener('click', () => {
-      if (gameData.money >= 10000) {
-        gameData.money -= 10000;
-        gameData.taxesPaid += 10000;
         updateUI();
         saveGame();
       }
