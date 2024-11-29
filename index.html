@@ -12,6 +12,7 @@
       text-align: center;
       margin: 0;
       padding: 20px;
+      transition: background-color 0.3s ease;
     }
 
     .game-box {
@@ -21,6 +22,7 @@
       background-color: #81C784;
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease, filter 0.3s ease;
     }
 
     button {
@@ -63,6 +65,21 @@
     .color-box:hover {
       opacity: 0.8;
     }
+
+    .color-picker-container {
+      margin-top: 20px;
+    }
+
+    input[type="color"] {
+      width: 50px;
+      height: 50px;
+      border: none;
+      cursor: pointer;
+    }
+
+    #item-counts {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -84,7 +101,13 @@
     <button id="rebirth" disabled>Rebirth ($1M)</button>
     <button id="make-investment">Make Investment ($25,000)</button>
     <button id="pay-tax" disabled>Pay Taxes ($10,000)</button>
-    <button id="test-humans" disabled>Test on Humans</button> <!-- Disabled until legal immunity is active -->
+    <button id="test-humans">Test on Humans</button> <!-- Disabled until legal immunity is active -->
+
+    <!-- Item Counts -->
+    <div id="item-counts">
+      <p>Conveyors: <span id="conveyor-count">0</span></p>
+      <p>Workers: <span id="worker-count">0</span></p>
+    </div>
 
     <!-- Theme Picker -->
     <div class="theme-picker">
@@ -94,14 +117,21 @@
       <div id="theme-purple" class="color-box" style="background-color: #9C27B0;"></div>
       <div id="theme-orange" class="color-box" style="background-color: #FF9800;"></div>
     </div>
+
+    <!-- Custom Color Picker -->
+    <div class="color-picker-container">
+      <label for="color-picker">Pick a Custom Color:</label>
+      <input type="color" id="color-picker" />
+    </div>
   </div>
 
   <script>
     // Initialize game data with valid numbers
     let gameData = {
       money: 0,
-      incomePerSecond: 0,  // Ensure this is a number, default to 0
+      incomePerSecond: 0,  
       conveyors: 0,
+      workers: 0,
       conveyorCost: 100,
       conveyorUpgradeCost: 500,
       workerCost: 1000,
@@ -113,10 +143,10 @@
       investments: 0,
       taxesPaid: 0,
       legalImmunityActive: false,
-      immunityTimer: 0
+      immunityTimer: 0,
+      timerStarted: false,
+      timerInterval: null
     };
-
-    let immunityTimerInterval = null;
 
     // Load saved game data
     function loadGame() {
@@ -165,8 +195,12 @@
       document.getElementById('rebirth-bonus').innerText = `Rebirth Bonus: x${gameData.rebirthBonus.toFixed(1)}`;
       document.getElementById('achievements').innerText = `Achievements: ${Object.keys(gameData.achievements).join(', ') || 'None'}`;
       document.getElementById('pay-tax').disabled = gameData.money < 10000;
-      document.getElementById('test-humans').disabled = !gameData.legalImmunityActive; // Enable only if immunity is active
+      document.getElementById('test-humans').disabled = !gameData.legalImmunityActive;
       document.getElementById('legal-immunity-status').innerText = `Legal Immunity: ${gameData.legalImmunityActive ? 'Yes' : 'No'}`;
+      
+      // Update item counts
+      document.getElementById('conveyor-count').innerText = gameData.conveyors;
+      document.getElementById('worker-count').innerText = gameData.workers;
 
       // Display timer status
       const minutes = Math.floor(gameData.immunityTimer / 60);
@@ -174,104 +208,74 @@
       document.getElementById('timer-status').innerText = `Timer: ${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
 
-    // Earn money manually
+    // Start the timer on first click
     document.getElementById('earn-money').addEventListener('click', () => {
-      gameData.money += 1;
+      if (!gameData.timerStarted) {
+        gameData.timerStarted = true;
+        gameData.timerInterval = setInterval(() => {
+          gameData.money += gameData.incomePerSecond;
+          gameData.immunityTimer++;
+          updateUI();
+          saveGame();
+        }, 1000);
+      }
+      gameData.money += 100; // Start earning
       updateUI();
       saveGame();
     });
 
-    // Buy a conveyor
+    // Button to buy conveyors
     document.getElementById('buy-conveyor').addEventListener('click', () => {
       if (gameData.money >= gameData.conveyorCost) {
         gameData.money -= gameData.conveyorCost;
-        gameData.conveyors += 1;
-        gameData.incomePerSecond += 10 * gameData.rebirthBonus;
-        gameData.conveyorCost = Math.floor(gameData.conveyorCost * 1.15);
+        gameData.conveyors++;
+        gameData.conveyorCost = Math.floor(gameData.conveyorCost * 1.5); // Increase cost
         updateUI();
         saveGame();
       }
     });
 
-    // Upgrade conveyor
+    // Button to upgrade conveyors
     document.getElementById('upgrade-conveyor').addEventListener('click', () => {
       if (gameData.money >= gameData.conveyorUpgradeCost) {
         gameData.money -= gameData.conveyorUpgradeCost;
-        gameData.incomePerSecond += 50 * gameData.rebirthBonus;
-        gameData.conveyorUpgradeCost = Math.floor(gameData.conveyorUpgradeCost * 1.2);
+        gameData.incomePerSecond += 50;
+        gameData.conveyorUpgradeCost = Math.floor(gameData.conveyorUpgradeCost * 1.5);
         updateUI();
         saveGame();
       }
     });
 
-    // Pay taxes and activate legal immunity for 3 minutes
-    document.getElementById('pay-tax').addEventListener('click', () => {
-      if (gameData.money >= 10000) {
-        gameData.money -= 10000;
-        gameData.taxesPaid += 10000;
-        gameData.legalImmunityActive = true;
-        gameData.immunityTimer = 180; // 3 minutes (180 seconds)
-
-        // Start the countdown timer
-        immunityTimerInterval = setInterval(() => {
-          if (gameData.immunityTimer > 0) {
-            gameData.immunityTimer -= 1;
-            updateUI();
-            saveGame();
-          } else {
-            clearInterval(immunityTimerInterval);
-            gameData.legalImmunityActive = false;
-            updateUI();
-            saveGame();
-          }
-        }, 1000);
-
-        updateUI();
-        saveGame();
-      }
-    });
-
-    // Test on humans (only available when legal immunity is active)
+    // Button to test on humans
     document.getElementById('test-humans').addEventListener('click', () => {
-      if (gameData.legalImmunityActive) {
-        alert('You are legally immune! Testing on humans is allowed!');
-      } else {
-        alert('Legal immunity is not active!');
-      }
+      gameData.legalImmunityActive = true;
+      updateUI();
+      saveGame();
     });
 
-    // Rebirth the game
-    document.getElementById('rebirth').addEventListener('click', () => {
-      if (gameData.money >= gameData.rebirthCost) {
-        gameData.money = 0;
-        gameData.incomePerSecond = 0;
-        gameData.conveyors = 0;
-        gameData.rebirthCost = Math.floor(gameData.rebirthCost * 2);
-        gameData.rebirthBonus += 0.1;
+    // Button to launch a product
+    document.getElementById('launch-product').addEventListener('click', () => {
+      if (!gameData.legalImmunityActive) {
+        alert("You must test on humans before launching a product!");
+      } else {
+        // Logic for launching the product
+        gameData.money -= gameData.productCost; // Deduct product cost
         updateUI();
         saveGame();
-        alert('You have rebirthed! Enjoy permanent benefits.');
       }
     });
 
-    // Change theme
+    // Handle the theme picker
     document.querySelectorAll('.color-box').forEach(box => {
       box.addEventListener('click', () => {
-        document.body.style.backgroundColor = box.style.backgroundColor;
+        const color = box.style.backgroundColor;
+        document.body.style.backgroundColor = color;
+        document.querySelector('.game-box').style.backgroundColor = `rgb(${parseInt(color.slice(4, 7)) * 1.3}, ${parseInt(color.slice(9, 12)) * 1.3}, ${parseInt(color.slice(14, 17)) * 1.3})`;
         saveGame();
       });
     });
 
-    // Generate income every second
-    setInterval(() => {
-      if (!isNaN(gameData.incomePerSecond)) {
-        gameData.money += gameData.incomePerSecond;
-      }
-      updateUI();
-      saveGame();
-    }, 1000);
-
-    // Load game and update UI on page load
+    // Load the game data and start the UI
     loadGame();
     updateUI();
   </script>
