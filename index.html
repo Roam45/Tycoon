@@ -126,10 +126,10 @@
   </div>
 
   <script>
-    // Initialize game data with valid numbers
+    // Initialize game data
     let gameData = {
       money: 0,
-      incomePerSecond: 0,  
+      incomePerSecond: 0,
       conveyors: 0,
       workers: 0,
       conveyorCost: 100,
@@ -175,18 +175,14 @@
     
       if (num === 0) return "0";
     
-      // Find the appropriate suffix
       const tier = Math.floor(Math.log10(num) / 3);
       const suffix = suffixes[tier];
-    
-      // Scale down the number to a more manageable size
       const scaled = num / Math.pow(10, tier * 3);
     
-      // Round to 2 decimal places and append the appropriate suffix
       return `${scaled.toFixed(2)}${suffix}`;
     }
 
-    // Update the UI safely
+    // Update the UI
     function updateUI() {
       document.getElementById('money-display').innerText = `Money: $${formatNumber(gameData.money)}`;
       document.getElementById('buy-conveyor').innerText = `Buy Conveyor ($${formatNumber(gameData.conveyorCost)})`;
@@ -219,65 +215,56 @@
           saveGame();
         }, 1000);
       }
-      gameData.money += 100; // Start earning
+      gameData.money += 100; // Start earning money immediately
       updateUI();
       saveGame();
     });
 
-    // Button to buy conveyors
+    // Buy conveyor
     document.getElementById('buy-conveyor').addEventListener('click', () => {
       if (gameData.money >= gameData.conveyorCost) {
         gameData.money -= gameData.conveyorCost;
         gameData.conveyors++;
-        gameData.conveyorCost = Math.floor(gameData.conveyorCost * 1.5); // Increase cost
+        gameData.incomePerSecond += 10; // Conveyor earns money over time
+        gameData.conveyorCost = Math.floor(gameData.conveyorCost * 1.5); // Increase cost of next conveyor
         updateUI();
         saveGame();
       }
     });
 
-    // Button to upgrade conveyors
+    // Upgrade conveyor
     document.getElementById('upgrade-conveyor').addEventListener('click', () => {
       if (gameData.money >= gameData.conveyorUpgradeCost) {
         gameData.money -= gameData.conveyorUpgradeCost;
-        gameData.incomePerSecond += 50;
+        gameData.incomePerSecond += 50; // Increase income per second with upgrade
         gameData.conveyorUpgradeCost = Math.floor(gameData.conveyorUpgradeCost * 1.5);
         updateUI();
         saveGame();
       }
     });
 
-    // Button to test on humans
+    // Test on humans
     document.getElementById('test-humans').addEventListener('click', () => {
       gameData.legalImmunityActive = true;
       updateUI();
       saveGame();
     });
 
-    // Button to launch a product
+    // Launch product
     document.getElementById('launch-product').addEventListener('click', () => {
       if (!gameData.legalImmunityActive) {
         alert("You must test on humans before launching a product!");
       } else {
-        // Logic for launching the product
-        gameData.money -= gameData.productCost; // Deduct product cost
+        gameData.money -= gameData.productCost;
         updateUI();
         saveGame();
       }
     });
 
-    // Handle the theme picker
-    document.querySelectorAll('.color-box').forEach(box => {
-      box.addEventListener('click', () => {
-        const color = box.style.backgroundColor;
-        document.body.style.backgroundColor = color;
-        document.querySelector('.game-box').style.backgroundColor = `rgb(${parseInt(color.slice(4, 7)) * 1.3}, ${parseInt(color.slice(9, 12)) * 1.3}, ${parseInt(color.slice(14, 17)) * 1.3})`;
-        saveGame();
-      });
-    });
-
-    // Load the game data and start the UI
+    // Load the saved game and initialize the UI
     loadGame();
     updateUI();
+
   </script>
 </body>
 </html>
