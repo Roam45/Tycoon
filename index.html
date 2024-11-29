@@ -201,18 +201,7 @@
       if (gameData.money >= gameData.stockInvestmentCost) {
         gameData.money -= gameData.stockInvestmentCost;
         gameData.incomePerSecond += 500 * gameData.rebirthBonus;
-        gameData.stockInvestmentCost = Math.floor(gameData.stockInvestmentCost * 1.5);
-        updateUI();
-        saveGame();
-      }
-    });
-
-    // Make investments
-    document.getElementById('make-investment').addEventListener('click', () => {
-      if (gameData.money >= 25000) {
-        gameData.money -= 25000;
-        gameData.investments += 1;
-        gameData.incomePerSecond += 200 * gameData.rebirthBonus;
+        gameData.stockInvestmentCost = Math.floor(gameData.stockInvestmentCost * 1.4);
         updateUI();
         saveGame();
       }
