@@ -140,12 +140,24 @@
     let timerInterval = null;
     let immunityTimerInterval = null;
 
+    function saveGame() {
+      localStorage.setItem('businessTycoonGame', JSON.stringify(gameData));
+    }
+
+    function loadGame() {
+      const savedGame = localStorage.getItem('businessTycoonGame');
+      if (savedGame) {
+        gameData = JSON.parse(savedGame);
+      }
+    }
+
     function startTimer() {
       if (!gameData.timerStarted) {
         gameData.timerStarted = true;
         timerInterval = setInterval(() => {
           gameData.immunityTimer++;
           updateTimerUI();
+          saveGame();
         }, 1000);
       }
     }
@@ -154,13 +166,6 @@
       const minutes = Math.floor(gameData.immunityTimer / 60);
       const seconds = gameData.immunityTimer % 60;
       document.getElementById('timer-status').innerText = `Timer: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-    }
-
-    function showNotification(message) {
-      const bar = document.getElementById('notification-bar');
-      bar.innerText = message;
-      bar.style.display = 'block';
-      setTimeout(() => (bar.style.display = 'none'), 3000);
     }
 
     function updateUI() {
@@ -180,6 +185,7 @@
       startTimer();
       gameData.money += 1;
       updateUI();
+      saveGame();
     });
 
     document.getElementById('buy-conveyor').addEventListener('click', () => {
@@ -189,6 +195,7 @@
         gameData.incomePerSecond += 10 * gameData.rebirthBonus;
         gameData.conveyorCost = Math.ceil(gameData.conveyorCost * 1.15);
         updateUI();
+        saveGame();
       }
     });
 
@@ -199,14 +206,17 @@
         gameData.incomePerSecond += 50 * gameData.rebirthBonus;
         gameData.upgradeCost = Math.ceil(gameData.upgradeCost * 1.25);
         updateUI();
+        saveGame();
       }
     });
 
     setInterval(() => {
       gameData.money += gameData.incomePerSecond;
       updateUI();
+      saveGame();
     }, 1000);
 
+    loadGame();
     updateUI();
   </script>
 </body>
