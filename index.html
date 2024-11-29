@@ -63,28 +63,49 @@
     .color-box:hover {
       opacity: 0.8;
     }
+
+    #notification-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #333;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      display: none;
+    }
   </style>
 </head>
 <body>
+  <div id="notification-bar">Notification</div>
+
   <div class="game-box">
     <h1>Business Tycoon</h1>
     <p id="money-display">Money: $0</p>
+    <p id="income-display">Income per Second: $0</p>
     <p id="rebirth-bonus">Rebirth Bonus: x1.0</p>
     <p id="achievements">Achievements: None</p>
     <p id="legal-immunity-status">Legal Immunity: No</p>
     <p id="timer-status">Timer: 0:00</p>
+    <p id="item-quantities">Conveyors: 0 | Upgrades: 0 | Workers: 0 | Products: 0</p>
 
     <!-- Gameplay Buttons -->
     <button id="earn-money">Earn Money</button>
     <button id="buy-conveyor">Buy Conveyor ($100)</button>
     <button id="upgrade-conveyor">Upgrade Conveyor ($500)</button>
     <button id="hire-worker">Hire Worker ($1,000)</button>
-    <button id="launch-product">Launch Product ($5,000)</button>
+    <button id="launch-product" disabled>Launch Product ($5,000)</button>
     <button id="invest-stock">Invest in Stock Market ($10,000)</button>
     <button id="rebirth" disabled>Rebirth ($1M)</button>
     <button id="make-investment">Make Investment ($25,000)</button>
     <button id="pay-tax" disabled>Pay Taxes ($10,000)</button>
-    <button id="test-humans" disabled>Test on Humans</button> <!-- Disabled until legal immunity is active -->
+    <button id="test-humans" disabled>Test on Humans</button>
+
+    <!-- Progress Bar -->
+    <div style="background: #ccc; border-radius: 8px; margin: 10px 0; width: 100%; height: 20px;">
+      <div id="rebirth-progress" style="background: #4CAF50; width: 0%; height: 100%; border-radius: 8px;"></div>
+    </div>
 
     <!-- Theme Picker -->
     <div class="theme-picker">
@@ -97,153 +118,95 @@
   </div>
 
   <script>
-    // Initialize game data with valid numbers
     let gameData = {
       money: 0,
-      incomePerSecond: 0,  // Ensure this is a number, default to 0
+      incomePerSecond: 0,
       conveyors: 0,
+      upgrades: 0,
+      workers: 0,
+      products: 0,
       conveyorCost: 100,
-      conveyorUpgradeCost: 500,
+      upgradeCost: 500,
       workerCost: 1000,
       productCost: 5000,
-      stockInvestmentCost: 10000,
       rebirthCost: 1e6,
       rebirthBonus: 1.0,
       achievements: {},
-      investments: 0,
-      taxesPaid: 0,
       legalImmunityActive: false,
-      immunityTimer: 0
+      immunityTimer: 0,
+      timerStarted: false,
     };
 
+    let timerInterval = null;
     let immunityTimerInterval = null;
 
-    // Load saved game data
-    function loadGame() {
-      const savedData = localStorage.getItem('tycoonGameData');
-      if (savedData) {
-        gameData = JSON.parse(savedData);
+    function startTimer() {
+      if (!gameData.timerStarted) {
+        gameData.timerStarted = true;
+        timerInterval = setInterval(() => {
+          gameData.immunityTimer++;
+          updateTimerUI();
+        }, 1000);
       }
     }
 
-    // Save game data to local storage
-    function saveGame() {
-      localStorage.setItem('tycoonGameData', JSON.stringify(gameData));
-    }
-
-    // Update the UI safely
-    function updateUI() {
-      document.getElementById('money-display').innerText = `Money: $${formatNumber(gameData.money)}`;
-      document.getElementById('buy-conveyor').innerText = `Buy Conveyor ($${formatNumber(gameData.conveyorCost)})`;
-      document.getElementById('upgrade-conveyor').innerText = `Upgrade Conveyor ($${formatNumber(gameData.conveyorUpgradeCost)})`;
-      document.getElementById('rebirth').disabled = gameData.money < gameData.rebirthCost;
-      document.getElementById('rebirth-bonus').innerText = `Rebirth Bonus: x${gameData.rebirthBonus.toFixed(1)}`;
-      document.getElementById('achievements').innerText = `Achievements: ${Object.keys(gameData.achievements).join(', ') || 'None'}`;
-      document.getElementById('pay-tax').disabled = gameData.money < 10000;
-      document.getElementById('test-humans').disabled = !gameData.legalImmunityActive; // Enable only if immunity is active
-      document.getElementById('legal-immunity-status').innerText = `Legal Immunity: ${gameData.legalImmunityActive ? 'Yes' : 'No'}`;
-
-      // Display timer status
+    function updateTimerUI() {
       const minutes = Math.floor(gameData.immunityTimer / 60);
       const seconds = gameData.immunityTimer % 60;
       document.getElementById('timer-status').innerText = `Timer: ${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
 
-    // Format numbers to display as $1k, $1M, etc.
-    function formatNumber(num) {
-      if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
-      if (num >= 1e3) return (num / 1e3).toFixed(1) + 'k';
-      return num.toFixed(0);
+    function showNotification(message) {
+      const bar = document.getElementById('notification-bar');
+      bar.innerText = message;
+      bar.style.display = 'block';
+      setTimeout(() => (bar.style.display = 'none'), 3000);
     }
 
-    // Earn money manually
+    function updateUI() {
+      document.getElementById('money-display').innerText = `Money: $${gameData.money.toLocaleString()}`;
+      document.getElementById('income-display').innerText = `Income per Second: $${gameData.incomePerSecond.toFixed(2)}`;
+      document.getElementById('item-quantities').innerText = 
+        `Conveyors: ${gameData.conveyors} | Upgrades: ${gameData.upgrades} | Workers: ${gameData.workers} | Products: ${gameData.products}`;
+      document.getElementById('buy-conveyor').innerText = `Buy Conveyor ($${gameData.conveyorCost})`;
+      document.getElementById('upgrade-conveyor').innerText = `Upgrade Conveyor ($${gameData.upgradeCost})`;
+      document.getElementById('launch-product').disabled = !gameData.legalImmunityActive || gameData.money < gameData.productCost;
+      document.getElementById('test-humans').disabled = gameData.money < 10000;
+      document.getElementById('rebirth').disabled = gameData.money < gameData.rebirthCost;
+      document.getElementById('pay-tax').disabled = gameData.money < 10000;
+    }
+
     document.getElementById('earn-money').addEventListener('click', () => {
+      startTimer();
       gameData.money += 1;
       updateUI();
-      saveGame();
     });
 
-    // Buy a conveyor
     document.getElementById('buy-conveyor').addEventListener('click', () => {
       if (gameData.money >= gameData.conveyorCost) {
         gameData.money -= gameData.conveyorCost;
-        gameData.conveyors += 1;
+        gameData.conveyors++;
         gameData.incomePerSecond += 10 * gameData.rebirthBonus;
-        gameData.conveyorCost = Math.floor(gameData.conveyorCost * 1.15);
+        gameData.conveyorCost = Math.ceil(gameData.conveyorCost * 1.15);
         updateUI();
-        saveGame();
       }
     });
 
-    // Pay taxes and activate legal immunity for 3 minutes
-    document.getElementById('pay-tax').addEventListener('click', () => {
-      if (gameData.money >= 10000) {
-        gameData.money -= 10000;
-        gameData.taxesPaid += 10000;
-        gameData.legalImmunityActive = true;
-        gameData.immunityTimer = 180; // 3 minutes (180 seconds)
-
-        // Start the countdown timer
-        immunityTimerInterval = setInterval(() => {
-          if (gameData.immunityTimer > 0) {
-            gameData.immunityTimer -= 1;
-            updateUI();
-            saveGame();
-          } else {
-            clearInterval(immunityTimerInterval);
-            gameData.legalImmunityActive = false;
-            updateUI();
-            saveGame();
-          }
-        }, 1000);
-
+    document.getElementById('upgrade-conveyor').addEventListener('click', () => {
+      if (gameData.money >= gameData.upgradeCost) {
+        gameData.money -= gameData.upgradeCost;
+        gameData.upgrades++;
+        gameData.incomePerSecond += 50 * gameData.rebirthBonus;
+        gameData.upgradeCost = Math.ceil(gameData.upgradeCost * 1.25);
         updateUI();
-        saveGame();
       }
     });
 
-    // Test on humans (only available when legal immunity is active)
-    document.getElementById('test-humans').addEventListener('click', () => {
-      if (gameData.legalImmunityActive) {
-        alert('You are legally immune! Testing on humans is allowed!');
-      } else {
-        alert('Legal immunity is not active!');
-      }
-    });
-
-    // Rebirth the game
-    document.getElementById('rebirth').addEventListener('click', () => {
-      if (gameData.money >= gameData.rebirthCost) {
-        gameData.money = 0;
-        gameData.incomePerSecond = 0;
-        gameData.conveyors = 0;
-        gameData.rebirthCost = Math.floor(gameData.rebirthCost * 2);
-        gameData.rebirthBonus += 0.1;
-        updateUI();
-        saveGame();
-        alert('You have rebirthed! Enjoy permanent benefits.');
-      }
-    });
-
-    // Change theme
-    document.querySelectorAll('.color-box').forEach(box => {
-      box.addEventListener('click', () => {
-        document.body.style.backgroundColor = box.style.backgroundColor;
-        saveGame();
-      });
-    });
-
-    // Generate income every second
     setInterval(() => {
-      if (!isNaN(gameData.incomePerSecond)) {
-        gameData.money += gameData.incomePerSecond;
-      }
+      gameData.money += gameData.incomePerSecond;
       updateUI();
-      saveGame();
     }, 1000);
 
-    // Load game and update UI on page load
-    loadGame();
     updateUI();
   </script>
 </body>
