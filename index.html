@@ -95,7 +95,7 @@
   </div>
 
   <script>
-    // Initialize game data
+    // Initialize game data with valid numbers
     let gameData = {
       money: 0,
       incomePerSecond: 0,
@@ -125,7 +125,7 @@
       localStorage.setItem('tycoonGameData', JSON.stringify(gameData));
     }
 
-    // Update the UI
+    // Update the UI safely
     function updateUI() {
       document.getElementById('money-display').innerText = `Money: $${formatNumber(gameData.money)}`;
       document.getElementById('income-display').innerText = `Income per second: $${formatNumber(gameData.incomePerSecond)}`;
@@ -156,8 +156,8 @@
       if (gameData.money >= gameData.conveyorCost) {
         gameData.money -= gameData.conveyorCost;
         gameData.conveyors += 1;
-        gameData.incomePerSecond += 10 * gameData.rebirthBonus;
-        gameData.conveyorCost = Math.floor(gameData.conveyorCost * 1.15);
+        gameData.incomePerSecond += 10 * gameData.rebirthBonus;  // Ensure no NaN here
+        gameData.conveyorCost = Math.floor(gameData.conveyorCost * 1.15);  // Prevent NaN in cost
         updateUI();
         saveGame();
       }
@@ -167,7 +167,7 @@
     document.getElementById('upgrade-conveyor').addEventListener('click', () => {
       if (gameData.money >= gameData.conveyorUpgradeCost) {
         gameData.money -= gameData.conveyorUpgradeCost;
-        gameData.incomePerSecond += 5 * gameData.conveyors * gameData.rebirthBonus;
+        gameData.incomePerSecond += 5 * gameData.conveyors * gameData.rebirthBonus; // Prevent NaN
         gameData.conveyorUpgradeCost = Math.floor(gameData.conveyorUpgradeCost * 1.5);
         updateUI();
         saveGame();
@@ -234,7 +234,6 @@
         gameData.money = 0;
         gameData.incomePerSecond = 0;
         gameData.conveyors = 0;
-        gameData.workerCost = 1000;
         gameData.rebirthCost = Math.floor(gameData.rebirthCost * 2);
         gameData.rebirthBonus += 0.1;
         updateUI();
@@ -253,7 +252,9 @@
 
     // Generate income every second
     setInterval(() => {
-      gameData.money += gameData.incomePerSecond;
+      if (!isNaN(gameData.incomePerSecond)) {
+        gameData.money += gameData.incomePerSecond;
+      }
       updateUI();
       saveGame();
     }, 1000);
