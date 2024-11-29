@@ -69,7 +69,6 @@
   <div class="game-box">
     <h1>Business Tycoon</h1>
     <p id="money-display">Money: $0</p>
-    <p id="income-display">Income per second: $0</p>
     <p id="rebirth-bonus">Rebirth Bonus: x1.0</p>
     <p id="achievements">Achievements: None</p>
     <p id="legal-immunity-status">Legal Immunity: No</p>
@@ -135,7 +134,6 @@
     // Update the UI safely
     function updateUI() {
       document.getElementById('money-display').innerText = `Money: $${formatNumber(gameData.money)}`;
-      document.getElementById('income-display').innerText = `Income per second: $${formatNumber(gameData.incomePerSecond)}`;
       document.getElementById('buy-conveyor').innerText = `Buy Conveyor ($${formatNumber(gameData.conveyorCost)})`;
       document.getElementById('upgrade-conveyor').innerText = `Upgrade Conveyor ($${formatNumber(gameData.conveyorUpgradeCost)})`;
       document.getElementById('rebirth').disabled = gameData.money < gameData.rebirthCost;
