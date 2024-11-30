@@ -17,10 +17,11 @@
     .game-box {
       margin: 20px auto;
       padding: 20px;
-      max-width: 400px;
+      max-width: 500px;
       background-color: #81C784;
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     button {
@@ -32,6 +33,7 @@
       background-color: #388E3C;
       color: white;
       cursor: pointer;
+      transition: background-color 0.2s ease;
     }
 
     button:disabled {
@@ -39,192 +41,173 @@
       cursor: not-allowed;
     }
 
-    .input-field {
-      padding: 5px;
-      margin: 10px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: 1px solid #ddd;
+    #theme-picker, #difficulty-selector {
+      margin: 20px 0;
     }
 
-    .color-picker {
-      margin: 10px;
+    #theme-picker input {
+      width: 50px;
+      height: 30px;
+      border: none;
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    #leaderboard, #achievements {
+      margin-top: 20px;
+      text-align: left;
+      padding: 10px;
+      background-color: #66BB6A;
+      border-radius: 8px;
     }
   </style>
 </head>
 <body>
   <div class="game-box">
     <h1>Business Tycoon</h1>
-    <p id="business-name-display">Business Name: <span id="business-name">Unnamed</span></p>
-    <input type="text" id="business-name-input" class="input-field" placeholder="Enter business name">
-    <button id="set-business-name">Set Name</button>
-    <p id="corporate-rank">Corporate Rank: Startup</p>
-    <input type="file" id="upload-logo" accept="image/*">
-    <img id="business-logo" src="" alt="Logo" style="max-width: 100px; display: none;">
-    
     <p id="money-display">Money: $0</p>
-    <p>Income per second: $<span id="income-per-second">0</span></p>
-    <p>Conveyors: <span id="conveyor-count">0</span></p>
-    <p>Factories: <span id="factory-count">0</span></p>
-    <p>Employees: <span id="employee-count">0</span></p>
+    <p id="income-display">Income Per Second: $0</p>
+    <p id="timer-display">Game Time: 0:00</p>
+    <p id="reputation-display">Reputation: 50/100</p>
+    <p id="difficulty-display">Difficulty: Normal</p>
     
+    <!-- Gameplay Buttons -->
     <button id="earn-money">Earn Money</button>
     <button id="buy-conveyor">Buy Conveyor ($100)</button>
-    <button id="buy-factory">Buy Factory ($5000)</button>
-    <button id="hire-employee">Hire Employee ($500)</button>
-    <button id="start-research">Start R&D ($1000)</button>
-    <button id="invest-stock">Invest in Stock Market ($10,000)</button>
-    <button id="daily-reward">Claim Daily Reward</button>
-    <button id="rebirth" disabled>Prestige: Reset for x2 Income</button>
-    
-    <p>Loan Balance: $<span id="loan-balance">0</span></p>
-    <p>Achievements: <span id="achievement-list">None</span></p>
-    
-    <input type="color" id="color-picker" class="color-picker">
-    <label for="color-picker">Pick Custom Color</label>
+    <button id="upgrade-conveyor">Upgrade Conveyor ($500)</button>
+    <button id="launch-product">Launch Product ($5,000)</button>
+    <button id="pay-tax">Pay Taxes (60% of Money)</button>
+    <button id="test-humans" disabled>Test on Humans</button>
+    <button id="prestige" disabled>Prestige ($5M)</button>
+
+    <!-- Theme Picker -->
+    <div id="theme-picker">
+      <h3>Choose Theme</h3>
+      <input type="color" id="background-color" title="Background Color">
+      <input type="color" id="game-box-color" title="Game Box Color">
+    </div>
+
+    <!-- Difficulty Selector -->
+    <div id="difficulty-selector">
+      <h3>Select Difficulty</h3>
+      <button id="easy-mode">Easy</button>
+      <button id="normal-mode">Normal</button>
+      <button id="hard-mode">Hard</button>
+    </div>
+
+    <!-- Achievements -->
+    <div id="achievements">
+      <h3>Achievements</h3>
+      <p id="achievement-list">None</p>
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="leaderboard">
+      <h3>Leaderboard</h3>
+      <p id="high-score">High Score: $0</p>
+    </div>
   </div>
 
   <script>
-    let money = 0;
-    let incomePerSecond = 0;
-    let conveyors = 0;
-    let factories = 0;
-    let employees = 0;
-    let conveyorCost = 100;
-    let factoryCost = 5000;
-    let employeeCost = 500;
-    let loanBalance = 0;
-    let achievements = [];
-    let businessName = "Unnamed";
-    let rebirthMultiplier = 1;
-    let dailyRewardClaimed = false;
+    // Core Game Data
+    let gameData = {
+      money: 0,
+      incomePerSecond: 0,
+      conveyors: 0,
+      upgrades: 0,
+      reputation: 50,
+      timer: 0,
+      difficulty: 'Normal',
+      highScore: 0,
+      achievements: [],
+    };
 
-    // Save the game state
+    // Save and Load Functions
     function saveGame() {
-      localStorage.setItem('gameData', JSON.stringify({
-        money,
-        incomePerSecond,
-        conveyors,
-        factories,
-        employees,
-        conveyorCost,
-        factoryCost,
-        employeeCost,
-        loanBalance,
-        achievements,
-        businessName,
-        rebirthMultiplier,
-        dailyRewardClaimed
-      }));
+      localStorage.setItem('businessTycoonSave', JSON.stringify(gameData));
     }
 
-    // Load the game state
     function loadGame() {
-      const savedData = JSON.parse(localStorage.getItem('gameData') || "{}");
-      money = savedData.money || 0;
-      incomePerSecond = savedData.incomePerSecond || 0;
-      conveyors = savedData.conveyors || 0;
-      factories = savedData.factories || 0;
-      employees = savedData.employees || 0;
-      conveyorCost = savedData.conveyorCost || 100;
-      factoryCost = savedData.factoryCost || 5000;
-      employeeCost = savedData.employeeCost || 500;
-      loanBalance = savedData.loanBalance || 0;
-      achievements = savedData.achievements || [];
-      businessName = savedData.businessName || "Unnamed";
-      rebirthMultiplier = savedData.rebirthMultiplier || 1;
-      dailyRewardClaimed = savedData.dailyRewardClaimed || false;
+      const savedData = JSON.parse(localStorage.getItem('businessTycoonSave'));
+      if (savedData) gameData = savedData;
     }
 
-    // Update the UI
-    function updateUI() {
-      document.getElementById('money-display').innerText = `Money: $${money.toLocaleString()}`;
-      document.getElementById('income-per-second').innerText = incomePerSecond * rebirthMultiplier;
-      document.getElementById('conveyor-count').innerText = conveyors;
-      document.getElementById('factory-count').innerText = factories;
-      document.getElementById('employee-count').innerText = employees;
-      document.getElementById('loan-balance').innerText = loanBalance.toLocaleString();
-      document.getElementById('business-name').innerText = businessName;
-      document.getElementById('rebirth').disabled = money < 100000; // Rebirth threshold
-      document.getElementById('daily-reward').disabled = dailyRewardClaimed;
-      document.getElementById('achievement-list').innerText = achievements.join(', ') || 'None';
-    }
-
-    // Set business name
-    document.getElementById('set-business-name').addEventListener('click', () => {
-      businessName = document.getElementById('business-name-input').value || "Unnamed";
-      saveGame();
-      updateUI();
-    });
-
-    // Upload logo
-    document.getElementById('upload-logo').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          document.getElementById('business-logo').src = reader.result;
-          document.getElementById('business-logo').style.display = "block";
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    // Earn money manually
-    document.getElementById('earn-money').addEventListener('click', () => {
-      money += 10;
-      updateUI();
-      saveGame();
-    });
-
-    // Buy conveyor
-    document.getElementById('buy-conveyor').addEventListener('click', () => {
-      if (money >= conveyorCost) {
-        money -= conveyorCost;
-        conveyors++;
-        incomePerSecond += 10;
-        conveyorCost = Math.floor(conveyorCost * 1.5);
-        updateUI();
-        saveGame();
-      }
-    });
-
-    // Hire employee
-    document.getElementById('hire-employee').addEventListener('click', () => {
-      if (money >= employeeCost) {
-        money -= employeeCost;
-        employees++;
-        incomePerSecond += 5; // Each employee adds $5 per second
-        employeeCost = Math.floor(employeeCost * 1.1);
-        updateUI();
-        saveGame();
-      }
-    });
-
-    // Daily reward
-    document.getElementById('daily-reward').addEventListener('click', () => {
-      if (!dailyRewardClaimed) {
-        money += 1000;
-        dailyRewardClaimed = true;
-        updateUI();
-        saveGame();
-      }
-    });
-
-    // Start R&D (Upgrades)
-    document.getElementById('start-research').addEventListener('click', () => {
-      if (money >= 1000) {
-        money -= 1000;
-        achievements.push("Started R&D");
-        incomePerSecond += 20; // Boost from research
-        updateUI();
-        saveGame();
-      }
-    });
-
-    // Load game on start
     loadGame();
     updateUI();
+
+    // UI Updates
+    function updateUI() {
+      document.getElementById('money-display').innerText = `Money: $${gameData.money}`;
+      document.getElementById('income-display').innerText = `Income Per Second: $${gameData.incomePerSecond}`;
+      document.getElementById('reputation-display').innerText = `Reputation: ${gameData.reputation}/100`;
+      document.getElementById('timer-display').innerText = `Game Time: ${Math.floor(gameData.timer / 60)}:${(gameData.timer % 60).toString().padStart(2, '0')}`;
+      document.getElementById('high-score').innerText = `High Score: $${gameData.highScore}`;
+      document.getElementById('achievement-list').innerText = gameData.achievements.join(', ') || 'None';
+    }
+
+    // Timer
+    setInterval(() => {
+      gameData.timer++;
+      gameData.money += gameData.incomePerSecond;
+      if (gameData.money > gameData.highScore) gameData.highScore = gameData.money;
+      updateUI();
+      saveGame();
+    }, 1000);
+
+    // Earn Money Button
+    document.getElementById('earn-money').addEventListener('click', () => {
+      gameData.money += 1;
+      updateUI();
+    });
+
+    // Buy Conveyor
+    document.getElementById('buy-conveyor').addEventListener('click', () => {
+      if (gameData.money >= 100) {
+        gameData.money -= 100;
+        gameData.conveyors++;
+        gameData.incomePerSecond += 10;
+        updateUI();
+      }
+    });
+
+    // Upgrade Conveyor
+    document.getElementById('upgrade-conveyor').addEventListener('click', () => {
+      if (gameData.money >= 500) {
+        gameData.money -= 500;
+        gameData.upgrades++;
+        gameData.incomePerSecond += 50;
+        updateUI();
+      }
+    });
+
+    // Theme Picker
+    document.getElementById('background-color').addEventListener('input', (e) => {
+      document.body.style.backgroundColor = e.target.value;
+      saveGame();
+    });
+
+    document.getElementById('game-box-color').addEventListener('input', (e) => {
+      document.querySelector('.game-box').style.backgroundColor = e.target.value;
+      saveGame();
+    });
+
+    // Difficulty Selector
+    document.getElementById('easy-mode').addEventListener('click', () => {
+      gameData.difficulty = 'Easy';
+      gameData.incomePerSecond *= 1.5;
+      updateUI();
+    });
+
+    document.getElementById('normal-mode').addEventListener('click', () => {
+      gameData.difficulty = 'Normal';
+      updateUI();
+    });
+
+    document.getElementById('hard-mode').addEventListener('click', () => {
+      gameData.difficulty = 'Hard';
+      gameData.incomePerSecond *= 0.8;
+      updateUI();
+    });
   </script>
 </body>
 </html>
