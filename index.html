@@ -5,197 +5,189 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Business Tycoon</title>
   <style>
+    /* General Styles */
     body {
-      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #4CAF50; /* Solid green background */
+      display: flex;
+      min-height: 100vh;
+      color: white;
     }
 
-    .menu {
+    .content {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .game-box {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      width: 300px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #fff;
+    }
+
+    .button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      border: none;
+      background-color: #388E3C; /* Dark green button color */
+      color: white;
+      transition: background-color 0.3s;
+    }
+
+    .button:disabled {
+      background-color: #BDBDBD;
+    }
+
+    .button:hover {
+      background-color: #2C6B29; /* Darker green when hovering */
+    }
+
+    /* Sidebar Styles */
+    #sidebar {
       position: fixed;
       top: 0;
       left: 0;
       height: 100%;
-      width: 1px;
-      background-color: var(--menu-color, #333);
-      overflow: hidden;
-      transition: width 0.3s;
+      width: 250px;
+      background-color: #388E3C; /* Dark green sidebar */
+      transition: width 0.3s ease-in-out;
       z-index: 1000;
+      overflow-x: hidden;
+      padding-top: 20px;
     }
 
-    .menu:hover {
-      width: 200px;
+    #sidebar.collapsed {
+      width: 50px;
     }
 
-    .menu-items {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      margin-top: 20px;
-    }
-
-    .menu button {
-      background-color: transparent;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      width: 100%;
-      text-align: left;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background-color 0.2s;
-    }
-
-    .menu button:hover {
-      background-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .menu h1 {
-      color: white;
-      text-align: center;
-      font-size: 20px;
-      margin: 10px 0;
+    #sidebar ul {
+      list-style: none;
       padding: 0;
-      display: none;
     }
 
-    .menu:hover h1 {
-      display: block;
-    }
-
-    .content {
-      margin-left: 10px;
+    #sidebar ul li {
       padding: 20px;
-      transition: margin-left 0.3s;
-    }
-
-    .menu:hover ~ .content {
-      margin-left: 210px;
-    }
-
-    .game-box {
-      margin: 20px auto;
-      padding: 20px;
-      max-width: 400px;
-      background-color: var(--theme-color, #81C784);
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-      transition: background-color 0.2s;
-    }
-
-    button {
-      margin: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      background-color: #388E3C;
       color: white;
       cursor: pointer;
+      text-align: center;
     }
 
-    button:disabled {
-      background-color: #555;
-      cursor: not-allowed;
+    #sidebar ul li:hover {
+      background-color: #2C6B29;
     }
 
-    #theme-settings, #stats-page {
+    #switch-sides {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #388E3C;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+      font-size: 1rem;
+    }
+
+    /* Theme Section */
+    #theme-page {
+      margin-top: 20px;
       display: none;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <!-- Vertical Collapsible Menu -->
-  <div class="menu">
-    <h1>Menu</h1>
-    <div class="menu-items">
-      <button id="go-to-game">Game</button>
-      <button id="go-to-stats">Stats</button>
-      <button id="go-to-theme">Theme</button>
-    </div>
+  <!-- Sidebar (Left) -->
+  <div id="sidebar">
+    <ul>
+      <li id="game-page-link">Game</li>
+      <li id="theme-page-link">Theme</li>
+    </ul>
+    <button id="switch-sides">Switch Sides</button>
   </div>
 
-  <!-- Main Content -->
+  <!-- Content Area -->
   <div class="content">
-    <!-- Game Section -->
-    <div id="game-page" class="game-box">
-      <h1>Business Tycoon</h1>
-      <p id="money-display">Money: $0</p>
-      <p id="rebirth-bonus">Rebirth Bonus: x1.0</p>
-      <p id="timer-status">Timer: 0:00</p>
-      <button id="earn-money">Earn Money</button>
-      <button id="buy-conveyor">Buy Conveyor ($100)</button>
-      <button id="hire-worker">Hire Worker ($500)</button>
+    <div id="game-page">
+      <div class="game-box">
+        <h1>Business Tycoon</h1>
+        <p id="money-display">Money: $0</p>
+        <p id="rebirth-bonus">Rebirth Bonus: x1.0</p>
+        <p id="legal-immunity-status">Legal Immunity: No</p>
+        <p id="timer-status">Timer: 0:00</p>
+
+        <!-- Game Buttons -->
+        <button id="earn-money" class="button">Earn Money</button>
+        <button id="buy-conveyor" class="button">Buy Conveyor ($100)</button>
+        <button id="upgrade-conveyor" class="button">Upgrade Conveyor ($500)</button>
+        <button id="hire-worker" class="button">Hire Worker ($1,000)</button>
+        <button id="launch-product" class="button">Launch Product ($5,000)</button>
+        <button id="rebirth" class="button" disabled>Rebirth ($1M)</button>
+        <button id="test-humans" class="button" disabled>Test on Humans</button>
+      </div>
     </div>
 
-    <!-- Stats Page -->
-    <div id="stats-page" class="game-box">
-      <h1>Game Statistics</h1>
-      <p id="total-earned">Total Money Earned: $0</p>
-      <p id="conveyors-owned">Conveyors Owned: 0</p>
-      <p id="workers-hired">Workers Hired: 0</p>
-      <button id="reset-game">Reset Game</button>
-    </div>
-
-    <!-- Theme Settings -->
-    <div id="theme-settings" class="game-box">
-      <h1>Customize Theme</h1>
-      <input type="color" id="color-picker" value="#4CAF50" />
-      <p>Choose a color to change the game theme.</p>
+    <!-- Theme Page -->
+    <div id="theme-page" class="hidden">
+      <h2>Choose a Theme</h2>
     </div>
   </div>
 
   <script>
     let gameData = {
       money: 0,
-      totalEarned: 0,
+      incomePerSecond: 0,
       conveyors: 0,
       workers: 0,
+      rebirthCost: 1e6,
       rebirthBonus: 1.0,
-      themeColor: '#4CAF50'
+      legalImmunityActive: false,
+      immunityTimer: 0,
     };
 
-    // Menu navigation
-    document.getElementById('go-to-game').addEventListener('click', () => showPage('game-page'));
-    document.getElementById('go-to-stats').addEventListener('click', () => showPage('stats-page'));
-    document.getElementById('go-to-theme').addEventListener('click', () => showPage('theme-settings'));
-
-    function showPage(pageId) {
-      document.getElementById('game-page').style.display = 'none';
-      document.getElementById('stats-page').style.display = 'none';
-      document.getElementById('theme-settings').style.display = 'none';
-      document.getElementById(pageId).style.display = 'block';
+    function updateUI() {
+      document.getElementById('money-display').innerText = `Money: $${formatNumber(gameData.money)}`;
+      document.getElementById('rebirth').disabled = gameData.money < gameData.rebirthCost;
+      document.getElementById('rebirth-bonus').innerText = `Rebirth Bonus: x${gameData.rebirthBonus.toFixed(1)}`;
+      document.getElementById('legal-immunity-status').innerText = `Legal Immunity: ${gameData.legalImmunityActive ? 'Yes' : 'No'}`;
+      document.getElementById('timer-status').innerText = `Timer: ${formatTime(gameData.immunityTimer)}`;
     }
 
-    // Theme color application
-    document.getElementById('color-picker').addEventListener('input', (event) => {
-      const newColor = event.target.value;
-      gameData.themeColor = newColor;
-      document.body.style.setProperty('--menu-color', darkenColor(newColor, 30));
-      document.body.style.setProperty('--theme-color', newColor);
-      document.body.style.backgroundColor = newColor;
-    });
-
-    function darkenColor(color, percent) {
-      const num = parseInt(color.replace("#", ""), 16),
-            amt = Math.round(2.55 * percent),
-            R = (num >> 16) + amt,
-            G = ((num >> 8) & 0x00FF) + amt,
-            B = (num & 0x0000FF) + amt;
-      return `#${(
-        0x1000000 +
-        (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
-        (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
-        (B < 255 ? (B < 1 ? 0 : B) : 255)
-      )
-        .toString(16)
-        .slice(1)}`;
+    function formatNumber(number) {
+      if (number >= 1e12) return (number / 1e12).toFixed(1) + 't';
+      if (number >= 1e9) return (number / 1e9).toFixed(1) + 'b';
+      if (number >= 1e6) return (number / 1e6).toFixed(1) + 'm';
+      if (number >= 1e3) return (number / 1e3).toFixed(1) + 'k';
+      return number.toString();
     }
 
-    // Game interactions
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
     document.getElementById('earn-money').addEventListener('click', () => {
-      gameData.money += 10;
-      gameData.totalEarned += 10;
+      gameData.money += 10 * gameData.rebirthBonus;
       updateUI();
     });
 
@@ -207,38 +199,61 @@
       }
     });
 
-    document.getElementById('hire-worker').addEventListener('click', () => {
+    document.getElementById('upgrade-conveyor').addEventListener('click', () => {
       if (gameData.money >= 500) {
         gameData.money -= 500;
+        gameData.conveyors++;
+        updateUI();
+      }
+    });
+
+    document.getElementById('hire-worker').addEventListener('click', () => {
+      if (gameData.money >= 1000) {
+        gameData.money -= 1000;
         gameData.workers++;
         updateUI();
       }
     });
 
-    // Reset game
-    document.getElementById('reset-game').addEventListener('click', () => {
-      if (confirm("Are you sure you want to reset your progress?")) {
-        gameData = {
-          money: 0,
-          totalEarned: 0,
-          conveyors: 0,
-          workers: 0,
-          rebirthBonus: 1.0,
-          themeColor: '#4CAF50'
-        };
+    document.getElementById('launch-product').addEventListener('click', () => {
+      gameData.money += 5000 * gameData.rebirthBonus;
+      updateUI();
+    });
+
+    document.getElementById('rebirth').addEventListener('click', () => {
+      if (gameData.money >= gameData.rebirthCost) {
+        gameData.money = 0;
+        gameData.rebirthBonus *= 1.1; // Increase rebirth bonus by 10%
         updateUI();
       }
     });
 
-    function updateUI() {
-      document.getElementById('money-display').innerText = `Money: $${gameData.money}`;
-      document.getElementById('total-earned').innerText = `Total Money Earned: $${gameData.totalEarned}`;
-      document.getElementById('conveyors-owned').innerText = `Conveyors Owned: ${gameData.conveyors}`;
-      document.getElementById('workers-hired').innerText = `Workers Hired: ${gameData.workers}`;
-    }
+    document.getElementById('test-humans').addEventListener('click', () => {
+      if (!gameData.legalImmunityActive) {
+        alert("You need legal immunity to test on humans!");
+      } else {
+        gameData.money += 10000 * gameData.rebirthBonus;
+        updateUI();
+      }
+    });
 
-    // Initial load
-    showPage('game-page');
+    // Sidebar functionality
+    document.getElementById('game-page-link').addEventListener('click', () => {
+      document.getElementById('game-page').style.display = 'block';
+      document.getElementById('theme-page').style.display = 'none';
+    });
+
+    document.getElementById('theme-page-link').addEventListener('click', () => {
+      document.getElementById('theme-page').style.display = 'block';
+      document.getElementById('game-page').style.display = 'none';
+    });
+
+    document.getElementById('switch-sides').addEventListener('click', () => {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.style.left = sidebar.style.left === '0px' ? 'calc(100% - 50px)' : '0px';
+    });
+
+    // Initialize UI
     updateUI();
   </script>
 </body>
