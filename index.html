@@ -7,20 +7,80 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #4CAF50;
+      margin: 0;
+      padding: 0;
+    }
+
+    .menu {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 1px;
+      background-color: var(--menu-color, #333);
+      overflow: hidden;
+      transition: width 0.3s;
+      z-index: 1000;
+    }
+
+    .menu:hover {
+      width: 200px;
+    }
+
+    .menu-items {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-top: 20px;
+    }
+
+    .menu button {
+      background-color: transparent;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.2s;
+    }
+
+    .menu button:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .menu h1 {
       color: white;
       text-align: center;
-      margin: 0;
+      font-size: 20px;
+      margin: 10px 0;
+      padding: 0;
+      display: none;
+    }
+
+    .menu:hover h1 {
+      display: block;
+    }
+
+    .content {
+      margin-left: 10px;
       padding: 20px;
+      transition: margin-left 0.3s;
+    }
+
+    .menu:hover ~ .content {
+      margin-left: 210px;
     }
 
     .game-box {
       margin: 20px auto;
       padding: 20px;
-      max-width: 500px;
-      background-color: #81C784;
+      max-width: 400px;
+      background-color: var(--theme-color, #81C784);
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.2s;
     }
 
     button {
@@ -32,7 +92,6 @@
       background-color: #388E3C;
       color: white;
       cursor: pointer;
-      transition: background-color 0.2s ease;
     }
 
     button:disabled {
@@ -40,261 +99,147 @@
       cursor: not-allowed;
     }
 
-    button:hover {
-      background-color: #66BB6A;
+    #theme-settings, #stats-page {
+      display: none;
     }
-
-    #theme-picker {
-      margin-top: 20px;
-    }
-
-    #theme-picker input {
-      width: 50px;
-      height: 30px;
-      border: none;
-      cursor: pointer;
-      margin: 5px;
-    }
-
-    #theme-picker p {
-      margin-top: 10px;
-      color: white;
-      font-size: 14px;
-    }
-
   </style>
 </head>
 <body>
-  <div class="game-box">
-    <h1>Business Tycoon</h1>
-    <p id="money-display">Money: $0</p>
-    <p id="income-display">Income Per Second: $0</p>
-    <p id="timer-display">Game Time: 0:00</p>
-    <p id="conveyor-display">Conveyors: 0</p>
-    <p id="worker-display">Workers: 0</p>
-    <p id="manager-display">Managers: 0</p>
-    <p id="executive-display">Executives: 0</p>
-
-    <!-- Gameplay Buttons -->
-    <button id="earn-money">Earn Money</button>
-    <button id="buy-conveyor">Buy Conveyor ($100)</button>
-    <button id="hire-worker">Hire Worker ($200)</button>
-    <button id="hire-manager">Hire Manager ($1,000)</button>
-    <button id="hire-executive">Hire Executive ($10,000)</button>
-    <button id="upgrade-conveyor">Upgrade Conveyor ($500)</button>
-
-    <!-- Reset Button -->
-    <button id="reset-game">Reset Game</button>
+  <!-- Vertical Collapsible Menu -->
+  <div class="menu">
+    <h1>Menu</h1>
+    <div class="menu-items">
+      <button id="go-to-game">Game</button>
+      <button id="go-to-stats">Stats</button>
+      <button id="go-to-theme">Theme</button>
+    </div>
   </div>
 
-  <!-- Color Picker Section -->
-  <div id="theme-picker">
-    <p>Choose a Theme Color:</p>
-    <input type="color" id="color-picker" value="#4CAF50">
+  <!-- Main Content -->
+  <div class="content">
+    <!-- Game Section -->
+    <div id="game-page" class="game-box">
+      <h1>Business Tycoon</h1>
+      <p id="money-display">Money: $0</p>
+      <p id="rebirth-bonus">Rebirth Bonus: x1.0</p>
+      <p id="timer-status">Timer: 0:00</p>
+      <button id="earn-money">Earn Money</button>
+      <button id="buy-conveyor">Buy Conveyor ($100)</button>
+      <button id="hire-worker">Hire Worker ($500)</button>
+    </div>
+
+    <!-- Stats Page -->
+    <div id="stats-page" class="game-box">
+      <h1>Game Statistics</h1>
+      <p id="total-earned">Total Money Earned: $0</p>
+      <p id="conveyors-owned">Conveyors Owned: 0</p>
+      <p id="workers-hired">Workers Hired: 0</p>
+      <button id="reset-game">Reset Game</button>
+    </div>
+
+    <!-- Theme Settings -->
+    <div id="theme-settings" class="game-box">
+      <h1>Customize Theme</h1>
+      <input type="color" id="color-picker" value="#4CAF50" />
+      <p>Choose a color to change the game theme.</p>
+    </div>
   </div>
 
   <script>
-    // Initialize game data
     let gameData = {
       money: 0,
-      incomePerSecond: 0,
+      totalEarned: 0,
       conveyors: 0,
       workers: 0,
-      managers: 0,
-      executives: 0,
-      conveyorCost: 100,
-      workerCost: 200,
-      managerCost: 1000,
-      executiveCost: 10000,
-      conveyorUpgradeCost: 500,
-      timer: 0,
-      themeColor: '#4CAF50', // Default theme color
-      gameBoxColor: '#81C784', // Default game box color
-      buttonColor: '#388E3C', // Default button color
-      buttonHoverColor: '#66BB6A' // Default button hover color
+      rebirthBonus: 1.0,
+      themeColor: '#4CAF50'
     };
 
-    // Function to load game data from localStorage
-    function loadGame() {
-      const savedData = localStorage.getItem('businessTycoonSave');
-      if (savedData) {
-        try {
-          const parsedData = JSON.parse(savedData);
-          gameData = { ...gameData, ...parsedData }; // Merge with defaults
-        } catch (e) {
-          console.error("Error parsing saved data:", e);
-        }
-      }
+    // Menu navigation
+    document.getElementById('go-to-game').addEventListener('click', () => showPage('game-page'));
+    document.getElementById('go-to-stats').addEventListener('click', () => showPage('stats-page'));
+    document.getElementById('go-to-theme').addEventListener('click', () => showPage('theme-settings'));
+
+    function showPage(pageId) {
+      document.getElementById('game-page').style.display = 'none';
+      document.getElementById('stats-page').style.display = 'none';
+      document.getElementById('theme-settings').style.display = 'none';
+      document.getElementById(pageId).style.display = 'block';
     }
 
-    // Function to save game data to localStorage
-    function saveGame() {
-      localStorage.setItem('businessTycoonSave', JSON.stringify(gameData));
+    // Theme color application
+    document.getElementById('color-picker').addEventListener('input', (event) => {
+      const newColor = event.target.value;
+      gameData.themeColor = newColor;
+      document.body.style.setProperty('--menu-color', darkenColor(newColor, 30));
+      document.body.style.setProperty('--theme-color', newColor);
+      document.body.style.backgroundColor = newColor;
+    });
+
+    function darkenColor(color, percent) {
+      const num = parseInt(color.replace("#", ""), 16),
+            amt = Math.round(2.55 * percent),
+            R = (num >> 16) + amt,
+            G = ((num >> 8) & 0x00FF) + amt,
+            B = (num & 0x0000FF) + amt;
+      return `#${(
+        0x1000000 +
+        (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+        (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+        (B < 255 ? (B < 1 ? 0 : B) : 255)
+      )
+        .toString(16)
+        .slice(1)}`;
     }
 
-    // Function to reset the game
-    function resetGame() {
-      gameData = {
-        money: 0,
-        incomePerSecond: 0,
-        conveyors: 0,
-        workers: 0,
-        managers: 0,
-        executives: 0,
-        conveyorCost: 100,
-        workerCost: 200,
-        managerCost: 1000,
-        executiveCost: 10000,
-        conveyorUpgradeCost: 500,
-        timer: 0,
-        themeColor: '#4CAF50', // Reset to default theme color
-        gameBoxColor: '#81C784', // Reset to default game box color
-        buttonColor: '#388E3C', // Reset to default button color
-        buttonHoverColor: '#66BB6A' // Reset to default button hover color
-      };
-      localStorage.removeItem('businessTycoonSave'); // Clear saved data
-      updateUI(); // Update the UI to reflect the reset
-    }
-
-    // Function to update the UI
-    function updateUI() {
-      document.getElementById('money-display').innerText = `Money: $${abbreviateNumber(gameData.money)}`;
-      document.getElementById('income-display').innerText = `Income Per Second: $${abbreviateNumber(gameData.incomePerSecond)}`;
-      document.getElementById('timer-display').innerText = `Game Time: ${Math.floor(gameData.timer / 60)}:${(gameData.timer % 60).toString().padStart(2, '0')}`;
-      document.getElementById('conveyor-display').innerText = `Conveyors: ${gameData.conveyors}`;
-      document.getElementById('worker-display').innerText = `Workers: ${gameData.workers}`;
-      document.getElementById('manager-display').innerText = `Managers: ${gameData.managers}`;
-      document.getElementById('executive-display').innerText = `Executives: ${gameData.executives}`;
-      document.getElementById('buy-conveyor').innerText = `Buy Conveyor ($${abbreviateNumber(gameData.conveyorCost)})`;
-      document.getElementById('hire-worker').innerText = `Hire Worker ($${abbreviateNumber(gameData.workerCost)})`;
-      document.getElementById('hire-manager').innerText = `Hire Manager ($${abbreviateNumber(gameData.managerCost)})`;
-      document.getElementById('hire-executive').innerText = `Hire Executive ($${abbreviateNumber(gameData.executiveCost)})`;
-      document.getElementById('upgrade-conveyor').innerText = `Upgrade Conveyor ($${abbreviateNumber(gameData.conveyorUpgradeCost)})`;
-
-      // Update button colors based on the theme
-      document.querySelectorAll('button').forEach(button => {
-        button.style.backgroundColor = gameData.buttonColor;
-        button.style.transition = 'background-color 0.2s ease';
-        button.onmouseover = () => button.style.backgroundColor = gameData.buttonHoverColor;
-        button.onmouseout = () => button.style.backgroundColor = gameData.buttonColor;
-      });
-
-      // Update the theme colors
-      document.body.style.backgroundColor = gameData.themeColor;
-      document.querySelector('.game-box').style.backgroundColor = gameData.gameBoxColor;
-    }
-
-    // Load game data and update UI
-    loadGame();
-    updateUI();
-
-    // Timer for income and game time
-    setInterval(() => {
-      gameData.timer++;
-      gameData.money += gameData.incomePerSecond;
-      updateUI();
-      saveGame();
-    }, 1000);
-
-    // Event Listeners for Game Actions
+    // Game interactions
     document.getElementById('earn-money').addEventListener('click', () => {
-      gameData.money += 1;
+      gameData.money += 10;
+      gameData.totalEarned += 10;
       updateUI();
-      saveGame();
     });
 
     document.getElementById('buy-conveyor').addEventListener('click', () => {
-      if (gameData.money >= gameData.conveyorCost) {
-        gameData.money -= gameData.conveyorCost;
+      if (gameData.money >= 100) {
+        gameData.money -= 100;
         gameData.conveyors++;
-        gameData.incomePerSecond += 1;
-        gameData.conveyorCost = Math.floor(gameData.conveyorCost * 1.15);
         updateUI();
-        saveGame();
       }
     });
 
     document.getElementById('hire-worker').addEventListener('click', () => {
-      if (gameData.money >= gameData.workerCost) {
-        gameData.money -= gameData.workerCost;
+      if (gameData.money >= 500) {
+        gameData.money -= 500;
         gameData.workers++;
-        gameData.incomePerSecond += 2;
-        gameData.workerCost = Math.floor(gameData.workerCost * 1.1);
         updateUI();
-        saveGame();
       }
     });
 
-    document.getElementById('hire-manager').addEventListener('click', () => {
-      if (gameData.money >= gameData.managerCost) {
-        gameData.money -= gameData.managerCost;
-        gameData.managers++;
-        gameData.incomePerSecond += 5;
-        gameData.managerCost = Math.floor(gameData.managerCost * 1.1);
-        updateUI();
-        saveGame();
-      }
-    });
-
-    document.getElementById('hire-executive').addEventListener('click', () => {
-      if (gameData.money >= gameData.executiveCost) {
-        gameData.money -= gameData.executiveCost;
-        gameData.executives++;
-        gameData.incomePerSecond += 10;
-        gameData.executiveCost = Math.floor(gameData.executiveCost * 1.1);
-        updateUI();
-        saveGame();
-      }
-    });
-
-    document.getElementById('upgrade-conveyor').addEventListener('click', () => {
-      if (gameData.money >= gameData.conveyorUpgradeCost) {
-        gameData.money -= gameData.conveyorUpgradeCost;
-        gameData.conveyors++;
-        gameData.conveyorUpgradeCost = Math.floor(gameData.conveyorUpgradeCost * 1.3);
-        gameData.incomePerSecond += 2;
-        updateUI();
-        saveGame();
-      }
-    });
-
-    // Event Listener for Reset Button
+    // Reset game
     document.getElementById('reset-game').addEventListener('click', () => {
-      if (confirm("Are you sure you want to reset the game? This will clear all your progress.")) {
-        resetGame();
+      if (confirm("Are you sure you want to reset your progress?")) {
+        gameData = {
+          money: 0,
+          totalEarned: 0,
+          conveyors: 0,
+          workers: 0,
+          rebirthBonus: 1.0,
+          themeColor: '#4CAF50'
+        };
+        updateUI();
       }
     });
 
-    // Event Listener for Theme Color Picker
-    document.getElementById('color-picker').addEventListener('input', (event) => {
-      const newColor = event.target.value;
-      gameData.themeColor = newColor;
-      gameData.gameBoxColor = adjustColorBrightness(newColor, 0.25);
-      gameData.buttonColor = adjustColorBrightness(newColor, -0.25);
-      gameData.buttonHoverColor = adjustColorBrightness(newColor, -0.1);
-      updateUI();
-      saveGame();
-    });
-
-    // Function to adjust color brightness
-    function adjustColorBrightness(color, amount) {
-      const colorHex = parseInt(color.slice(1), 16);
-      const r = (colorHex >> 16) + amount;
-      const g = ((colorHex >> 8) & 0x00FF) + amount;
-      const b = (colorHex & 0x0000FF) + amount;
-      return `#${(1 << 24) | ((Math.min(255, r) & 0xFF) << 16) | ((Math.min(255, g) & 0xFF) << 8) | (Math.min(255, b) & 0xFF)}`.slice(1);
+    function updateUI() {
+      document.getElementById('money-display').innerText = `Money: $${gameData.money}`;
+      document.getElementById('total-earned').innerText = `Total Money Earned: $${gameData.totalEarned}`;
+      document.getElementById('conveyors-owned').innerText = `Conveyors Owned: ${gameData.conveyors}`;
+      document.getElementById('workers-hired').innerText = `Workers Hired: ${gameData.workers}`;
     }
 
-    // Abbreviate numbers
-    function abbreviateNumber(num) {
-      const suffixes = ["", "k", "m", "b", "t", "quad", "quint", "sext", "sept", "oct", "non", "dec", "undec"];
-      let order = Math.floor(Math.log10(num) / 3);
-      if (order > suffixes.length - 1) order = suffixes.length - 1;
-      let abbreviated = (num / Math.pow(1000, order)).toFixed(2);
-      if (abbreviated.endsWith(".00")) abbreviated = abbreviated.slice(0, -3); // Remove trailing zeros
-      return `${abbreviated}${suffixes[order]}`;
-    }
-
+    // Initial load
+    showPage('game-page');
+    updateUI();
   </script>
 </body>
 </html>
