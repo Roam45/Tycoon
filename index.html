@@ -10,7 +10,7 @@
       margin: 0;
       padding: 0;
       font-family: Arial, sans-serif;
-      background-color: #4CAF50; /* Solid green background */
+      background-color: #4CAF50; /* Default solid green background */
       display: flex;
       min-height: 100vh;
       color: white;
@@ -68,14 +68,9 @@
       height: 100%;
       width: 250px;
       background-color: #388E3C; /* Dark green sidebar */
-      transition: width 0.3s ease-in-out;
       z-index: 1000;
-      overflow-x: hidden;
       padding-top: 20px;
-    }
-
-    #sidebar.collapsed {
-      width: 50px;
+      transition: width 0.3s ease-in-out;
     }
 
     #sidebar ul {
@@ -94,17 +89,18 @@
       background-color: #2C6B29;
     }
 
-    #switch-sides {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #388E3C;
+    #color-selector {
+      margin-top: 30px;
       padding: 10px;
-      border-radius: 5px;
-      cursor: pointer;
-      color: white;
+      text-align: center;
+    }
+
+    #color-selector select {
+      padding: 10px;
       font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
     }
 
     /* Theme Section */
@@ -122,7 +118,17 @@
       <li id="game-page-link">Game</li>
       <li id="theme-page-link">Theme</li>
     </ul>
-    <button id="switch-sides">Switch Sides</button>
+
+    <!-- Color Scheme Selector -->
+    <div id="color-selector">
+      <label for="theme-colors">Select Theme Color:</label>
+      <select id="theme-colors">
+        <option value="#4CAF50">Green</option>
+        <option value="#2196F3">Blue</option>
+        <option value="#FF5722">Red</option>
+        <option value="#9C27B0">Purple</option>
+      </select>
+    </div>
   </div>
 
   <!-- Content Area -->
@@ -135,18 +141,24 @@
         <p id="legal-immunity-status">Legal Immunity: No</p>
         <p id="timer-status">Timer: 0:00</p>
 
-        <!-- Game Buttons -->
-        <button id="earn-money" class="button">Earn Money</button>
-        <button id="buy-conveyor" class="button">Buy Conveyor ($100)</button>
-        <button id="upgrade-conveyor" class="button">Upgrade Conveyor ($500)</button>
-        <button id="hire-worker" class="button">Hire Worker ($1,000)</button>
-        <button id="launch-product" class="button">Launch Product ($5,000)</button>
-        <button id="rebirth" class="button" disabled>Rebirth ($1M)</button>
-        <button id="test-humans" class="button" disabled>Test on Humans</button>
+        <!-- Game Buttons (arranged in 2, 3, 2, 3) -->
+        <div>
+          <button id="earn-money" class="button">Earn Money</button>
+          <button id="buy-conveyor" class="button">Buy Conveyor ($100)</button>
+        </div>
+        <div>
+          <button id="upgrade-conveyor" class="button">Upgrade Conveyor ($500)</button>
+          <button id="hire-worker" class="button">Hire Worker ($1,000)</button>
+          <button id="launch-product" class="button">Launch Product ($5,000)</button>
+        </div>
+        <div>
+          <button id="rebirth" class="button" disabled>Rebirth ($1M)</button>
+          <button id="test-humans" class="button" disabled>Test on Humans</button>
+        </div>
       </div>
     </div>
 
-    <!-- Theme Page -->
+    <!-- Theme Page (hidden initially) -->
     <div id="theme-page" class="hidden">
       <h2>Choose a Theme</h2>
     </div>
@@ -237,20 +249,21 @@
       }
     });
 
-    // Sidebar functionality
+    // Theme Color Selector
+    document.getElementById('theme-colors').addEventListener('change', (e) => {
+      const themeColor = e.target.value;
+      document.body.style.backgroundColor = themeColor;
+    });
+
+    // Navigation
     document.getElementById('game-page-link').addEventListener('click', () => {
       document.getElementById('game-page').style.display = 'block';
       document.getElementById('theme-page').style.display = 'none';
     });
 
     document.getElementById('theme-page-link').addEventListener('click', () => {
-      document.getElementById('theme-page').style.display = 'block';
       document.getElementById('game-page').style.display = 'none';
-    });
-
-    document.getElementById('switch-sides').addEventListener('click', () => {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.style.left = sidebar.style.left === '0px' ? 'calc(100% - 50px)' : '0px';
+      document.getElementById('theme-page').style.display = 'block';
     });
 
     // Initialize UI
