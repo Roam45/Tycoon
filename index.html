@@ -82,6 +82,9 @@
     <button id="hire-manager">Hire Manager ($1,000)</button>
     <button id="hire-executive">Hire Executive ($10,000)</button>
     <button id="upgrade-conveyor">Upgrade Conveyor ($500)</button>
+
+    <!-- Reset Button -->
+    <button id="reset-game">Reset Game</button>
   </div>
 
   <!-- Color Picker Section -->
@@ -127,6 +130,30 @@
     // Function to save game data to localStorage
     function saveGame() {
       localStorage.setItem('businessTycoonSave', JSON.stringify(gameData));
+    }
+
+    // Function to reset the game
+    function resetGame() {
+      gameData = {
+        money: 0,
+        incomePerSecond: 0,
+        conveyors: 0,
+        workers: 0,
+        managers: 0,
+        executives: 0,
+        conveyorCost: 100,
+        workerCost: 200,
+        managerCost: 1000,
+        executiveCost: 10000,
+        conveyorUpgradeCost: 500,
+        timer: 0,
+        themeColor: '#4CAF50', // Reset to default theme color
+        gameBoxColor: '#81C784', // Reset to default game box color
+        buttonColor: '#388E3C', // Reset to default button color
+        buttonHoverColor: '#66BB6A' // Reset to default button hover color
+      };
+      localStorage.removeItem('businessTycoonSave'); // Clear saved data
+      updateUI(); // Update the UI to reflect the reset
     }
 
     // Function to update the UI
@@ -202,8 +229,8 @@
       if (gameData.money >= gameData.managerCost) {
         gameData.money -= gameData.managerCost;
         gameData.managers++;
-        gameData.incomePerSecond += 10;
-        gameData.managerCost = Math.floor(gameData.managerCost * 1.25);
+        gameData.incomePerSecond += 5;
+        gameData.managerCost = Math.floor(gameData.managerCost * 1.1);
         updateUI();
         saveGame();
       }
@@ -213,8 +240,8 @@
       if (gameData.money >= gameData.executiveCost) {
         gameData.money -= gameData.executiveCost;
         gameData.executives++;
-        gameData.incomePerSecond *= 1.1; // Income multiplier
-        gameData.executiveCost = Math.floor(gameData.executiveCost * 1.5);
+        gameData.incomePerSecond += 10;
+        gameData.executiveCost = Math.floor(gameData.executiveCost * 1.1);
         updateUI();
         saveGame();
       }
@@ -231,6 +258,33 @@
       }
     });
 
+    // Event Listener for Reset Button
+    document.getElementById('reset-game').addEventListener('click', () => {
+      if (confirm("Are you sure you want to reset the game? This will clear all your progress.")) {
+        resetGame();
+      }
+    });
+
+    // Event Listener for Theme Color Picker
+    document.getElementById('color-picker').addEventListener('input', (event) => {
+      const newColor = event.target.value;
+      gameData.themeColor = newColor;
+      gameData.gameBoxColor = adjustColorBrightness(newColor, 0.25);
+      gameData.buttonColor = adjustColorBrightness(newColor, -0.25);
+      gameData.buttonHoverColor = adjustColorBrightness(newColor, -0.1);
+      updateUI();
+      saveGame();
+    });
+
+    // Function to adjust color brightness
+    function adjustColorBrightness(color, amount) {
+      const colorHex = parseInt(color.slice(1), 16);
+      const r = (colorHex >> 16) + amount;
+      const g = ((colorHex >> 8) & 0x00FF) + amount;
+      const b = (colorHex & 0x0000FF) + amount;
+      return `#${(1 << 24) | ((Math.min(255, r) & 0xFF) << 16) | ((Math.min(255, g) & 0xFF) << 8) | (Math.min(255, b) & 0xFF)}`.slice(1);
+    }
+
     // Abbreviate numbers
     function abbreviateNumber(num) {
       const suffixes = ["", "k", "m", "b", "t", "quad", "quint", "sext", "sept", "oct", "non", "dec", "undec"];
@@ -240,6 +294,7 @@
       if (abbreviated.endsWith(".00")) abbreviated = abbreviated.slice(0, -3); // Remove trailing zeros
       return `${abbreviated}${suffixes[order]}`;
     }
+
   </script>
 </body>
 </html>
