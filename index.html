@@ -21,7 +21,6 @@
       background-color: #81C784;
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     button {
@@ -41,8 +40,8 @@
       cursor: not-allowed;
     }
 
-    #theme-picker, #difficulty-selector {
-      margin: 20px 0;
+    #theme-picker {
+      margin-top: 20px;
     }
 
     #theme-picker input {
@@ -53,13 +52,12 @@
       margin: 5px;
     }
 
-    #leaderboard, #achievements {
-      margin-top: 20px;
-      text-align: left;
-      padding: 10px;
-      background-color: #66BB6A;
-      border-radius: 8px;
+    #theme-picker p {
+      margin-top: 10px;
+      color: white;
+      font-size: 14px;
     }
+
   </style>
 </head>
 <body>
@@ -68,146 +66,174 @@
     <p id="money-display">Money: $0</p>
     <p id="income-display">Income Per Second: $0</p>
     <p id="timer-display">Game Time: 0:00</p>
-    <p id="reputation-display">Reputation: 50/100</p>
-    <p id="difficulty-display">Difficulty: Normal</p>
-    
+    <p id="conveyor-display">Conveyors: 0</p>
+    <p id="worker-display">Workers: 0</p>
+    <p id="manager-display">Managers: 0</p>
+    <p id="executive-display">Executives: 0</p>
+
     <!-- Gameplay Buttons -->
     <button id="earn-money">Earn Money</button>
     <button id="buy-conveyor">Buy Conveyor ($100)</button>
+    <button id="hire-worker">Hire Worker ($200)</button>
+    <button id="hire-manager">Hire Manager ($1,000)</button>
+    <button id="hire-executive">Hire Executive ($10,000)</button>
     <button id="upgrade-conveyor">Upgrade Conveyor ($500)</button>
-    <button id="launch-product">Launch Product ($5,000)</button>
-    <button id="pay-tax">Pay Taxes (60% of Money)</button>
-    <button id="test-humans" disabled>Test on Humans</button>
-    <button id="prestige" disabled>Prestige ($5M)</button>
+  </div>
 
-    <!-- Theme Picker -->
-    <div id="theme-picker">
-      <h3>Choose Theme</h3>
-      <input type="color" id="background-color" title="Background Color">
-      <input type="color" id="game-box-color" title="Game Box Color">
-    </div>
-
-    <!-- Difficulty Selector -->
-    <div id="difficulty-selector">
-      <h3>Select Difficulty</h3>
-      <button id="easy-mode">Easy</button>
-      <button id="normal-mode">Normal</button>
-      <button id="hard-mode">Hard</button>
-    </div>
-
-    <!-- Achievements -->
-    <div id="achievements">
-      <h3>Achievements</h3>
-      <p id="achievement-list">None</p>
-    </div>
-
-    <!-- Leaderboard -->
-    <div id="leaderboard">
-      <h3>Leaderboard</h3>
-      <p id="high-score">High Score: $0</p>
-    </div>
+  <!-- Color Picker Section -->
+  <div id="theme-picker">
+    <p>Choose a Theme Color:</p>
+    <input type="color" id="color-picker" value="#4CAF50">
+    <button id="apply-theme">Apply Theme</button>
   </div>
 
   <script>
-    // Core Game Data
+    // Initialize game data
     let gameData = {
       money: 0,
       incomePerSecond: 0,
       conveyors: 0,
-      upgrades: 0,
-      reputation: 50,
+      workers: 0,
+      managers: 0,
+      executives: 0,
+      conveyorCost: 100,
+      workerCost: 200,
+      managerCost: 1000,
+      executiveCost: 10000,
+      conveyorUpgradeCost: 500,
       timer: 0,
-      difficulty: 'Normal',
-      highScore: 0,
-      achievements: [],
+      themeColor: '#4CAF50', // Default theme color
+      gameBoxColor: '#81C784', // Default game box color
     };
 
-    // Save and Load Functions
+    // Function to load game data from localStorage
+    function loadGame() {
+      const savedData = localStorage.getItem('businessTycoonSave');
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          gameData = { ...gameData, ...parsedData }; // Merge with defaults
+        } catch (e) {
+          console.error("Error parsing saved data:", e);
+        }
+      }
+    }
+
+    // Function to save game data to localStorage
     function saveGame() {
       localStorage.setItem('businessTycoonSave', JSON.stringify(gameData));
     }
 
-    function loadGame() {
-      const savedData = JSON.parse(localStorage.getItem('businessTycoonSave'));
-      if (savedData) gameData = savedData;
+    // Function to update the UI
+    function updateUI() {
+      document.getElementById('money-display').innerText = `Money: $${gameData.money.toFixed(2)}`;
+      document.getElementById('income-display').innerText = `Income Per Second: $${gameData.incomePerSecond.toFixed(2)}`;
+      document.getElementById('timer-display').innerText = `Game Time: ${Math.floor(gameData.timer / 60)}:${(gameData.timer % 60).toString().padStart(2, '0')}`;
+      document.getElementById('conveyor-display').innerText = `Conveyors: ${gameData.conveyors}`;
+      document.getElementById('worker-display').innerText = `Workers: ${gameData.workers}`;
+      document.getElementById('manager-display').innerText = `Managers: ${gameData.managers}`;
+      document.getElementById('executive-display').innerText = `Executives: ${gameData.executives}`;
+      document.getElementById('buy-conveyor').innerText = `Buy Conveyor ($${gameData.conveyorCost})`;
+      document.getElementById('hire-worker').innerText = `Hire Worker ($${gameData.workerCost})`;
+      document.getElementById('hire-manager').innerText = `Hire Manager ($${gameData.managerCost})`;
+      document.getElementById('hire-executive').innerText = `Hire Executive ($${gameData.executiveCost})`;
+      document.getElementById('upgrade-conveyor').innerText = `Upgrade Conveyor ($${gameData.conveyorUpgradeCost})`;
+      
+      // Update the theme colors
+      document.body.style.backgroundColor = gameData.themeColor;
+      document.querySelector('.game-box').style.backgroundColor = gameData.gameBoxColor;
     }
 
+    // Load game data and update UI
     loadGame();
     updateUI();
 
-    // UI Updates
-    function updateUI() {
-      document.getElementById('money-display').innerText = `Money: $${gameData.money}`;
-      document.getElementById('income-display').innerText = `Income Per Second: $${gameData.incomePerSecond}`;
-      document.getElementById('reputation-display').innerText = `Reputation: ${gameData.reputation}/100`;
-      document.getElementById('timer-display').innerText = `Game Time: ${Math.floor(gameData.timer / 60)}:${(gameData.timer % 60).toString().padStart(2, '0')}`;
-      document.getElementById('high-score').innerText = `High Score: $${gameData.highScore}`;
-      document.getElementById('achievement-list').innerText = gameData.achievements.join(', ') || 'None';
-    }
-
-    // Timer
+    // Timer for income and game time
     setInterval(() => {
       gameData.timer++;
       gameData.money += gameData.incomePerSecond;
-      if (gameData.money > gameData.highScore) gameData.highScore = gameData.money;
       updateUI();
       saveGame();
     }, 1000);
 
-    // Earn Money Button
+    // Event Listeners for Game Actions
     document.getElementById('earn-money').addEventListener('click', () => {
       gameData.money += 1;
       updateUI();
+      saveGame();
     });
 
-    // Buy Conveyor
     document.getElementById('buy-conveyor').addEventListener('click', () => {
-      if (gameData.money >= 100) {
-        gameData.money -= 100;
+      if (gameData.money >= gameData.conveyorCost) {
+        gameData.money -= gameData.conveyorCost;
         gameData.conveyors++;
+        gameData.incomePerSecond += 1;
+        gameData.conveyorCost = Math.floor(gameData.conveyorCost * 1.15);
+        updateUI();
+        saveGame();
+      }
+    });
+
+    document.getElementById('hire-worker').addEventListener('click', () => {
+      if (gameData.money >= gameData.workerCost) {
+        gameData.money -= gameData.workerCost;
+        gameData.workers++;
+        gameData.incomePerSecond += 2;
+        gameData.workerCost = Math.floor(gameData.workerCost * 1.1);
+        updateUI();
+        saveGame();
+      }
+    });
+
+    document.getElementById('hire-manager').addEventListener('click', () => {
+      if (gameData.money >= gameData.managerCost) {
+        gameData.money -= gameData.managerCost;
+        gameData.managers++;
         gameData.incomePerSecond += 10;
+        gameData.managerCost = Math.floor(gameData.managerCost * 1.25);
         updateUI();
+        saveGame();
       }
     });
 
-    // Upgrade Conveyor
+    document.getElementById('hire-executive').addEventListener('click', () => {
+      if (gameData.money >= gameData.executiveCost) {
+        gameData.money -= gameData.executiveCost;
+        gameData.executives++;
+        gameData.incomePerSecond *= 1.1; // Income multiplier
+        gameData.executiveCost = Math.floor(gameData.executiveCost * 1.5);
+        updateUI();
+        saveGame();
+      }
+    });
+
     document.getElementById('upgrade-conveyor').addEventListener('click', () => {
-      if (gameData.money >= 500) {
-        gameData.money -= 500;
-        gameData.upgrades++;
-        gameData.incomePerSecond += 50;
+      if (gameData.money >= gameData.conveyorUpgradeCost) {
+        gameData.money -= gameData.conveyorUpgradeCost;
+        gameData.incomePerSecond += 5;
+        gameData.conveyorUpgradeCost = Math.floor(gameData.conveyorUpgradeCost * 1.2);
         updateUI();
+        saveGame();
       }
     });
 
-    // Theme Picker
-    document.getElementById('background-color').addEventListener('input', (e) => {
-      document.body.style.backgroundColor = e.target.value;
+    // Color Picker Event
+    document.getElementById('apply-theme').addEventListener('click', () => {
+      const selectedColor = document.getElementById('color-picker').value;
+      gameData.themeColor = selectedColor;
+      gameData.gameBoxColor = shadeColor(selectedColor, 0.3); // Lighten the color for the game box
+      updateUI();
       saveGame();
     });
 
-    document.getElementById('game-box-color').addEventListener('input', (e) => {
-      document.querySelector('.game-box').style.backgroundColor = e.target.value;
-      saveGame();
-    });
-
-    // Difficulty Selector
-    document.getElementById('easy-mode').addEventListener('click', () => {
-      gameData.difficulty = 'Easy';
-      gameData.incomePerSecond *= 1.5;
-      updateUI();
-    });
-
-    document.getElementById('normal-mode').addEventListener('click', () => {
-      gameData.difficulty = 'Normal';
-      updateUI();
-    });
-
-    document.getElementById('hard-mode').addEventListener('click', () => {
-      gameData.difficulty = 'Hard';
-      gameData.incomePerSecond *= 0.8;
-      updateUI();
-    });
+    // Function to shade a color (for making the game box color more saturated)
+    function shadeColor(color, percent) {
+      const R = parseInt(color.substring(1, 3), 16);
+      const G = parseInt(color.substring(3, 5), 16);
+      const B = parseInt(color.substring(5, 7), 16);
+      const t = percent < 0 ? 0 : 255;
+      return `#${(0x1000000 + (Math.round((t - R) * percent) + R) * 0x10000 + (Math.round((t - G) * percent) + G) * 0x100 + (Math.round((t - B) * percent) + B)).toString(16).slice(1)}`;
+    }
   </script>
 </body>
 </html>
